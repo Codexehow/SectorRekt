@@ -1,0 +1,15 @@
+# Godot 4
+.godot/
+.import/
+export_presets.cfg
+*.export
+
+# Ziva / Logs
+logs/
+ziva/
+*.log
+*.db*
+
+# OS
+Thumbs.db
+.DS_Store
