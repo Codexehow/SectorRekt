@@ -35,6 +35,17 @@ border_color = Color(0, 1, 0, 0.4)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6"]
 bg_color = Color(0, 1, 0, 0.03)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_OverHeatBG"]
+bg_color = Color(0.05, 0.05, 0.08, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.5, 0, 0.6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_OverHeatFill"]
+bg_color = Color(0, 0, 0, 0.1)
+
 [node name="CPUHUD" type="CanvasLayer" unique_id=457882972]
 layer = 100
 script = ExtResource("1_j1n2k")
@@ -225,7 +236,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(290, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 10
-text = "Q/RMB: CPU | LMB: Fire | B: Blink | A/D: Turn | W/S: Speed | G: Corruption"
+text = "Q/RMB: CPU | LMB: Fire | B: Blink | A/D: Turn | W/S: Speed | G: Corruption | OverHeat fills at max CPU!"
 autowrap_mode = 2
 
 [node name="OptionsPanel" type="Control" parent="." unique_id=1890016132]
@@ -288,3 +299,62 @@ text = "Resolution:"
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 fit_to_longest_item = false
+
+[node name="OverHeatPanel" type="Control" parent="." unique_id=1890016133]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -70.0
+offset_right = 150.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="OverHeatPanelBackground" type="Panel" parent="OverHeatPanel" unique_id=183518132]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_OverHeatBG")
+
+[node name="OverHeatPanelBackground2" type="Panel" parent="OverHeatPanel" unique_id=1564203123]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_OverHeatFill")
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="OverHeatPanel" unique_id=197012767]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.04
+anchor_right = 0.96
+anchor_bottom = 0.96
+theme_override_constants/separation = 3
+
+[node name="OverHeatLabel" type="Label" parent="OverHeatPanel/VBoxContainer3" unique_id=210651863]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "OverHeat"
+
+[node name="OverHeatBar" type="ProgressBar" parent="OverHeatPanel/VBoxContainer3" unique_id=255068687]
+custom_minimum_size = Vector2(280, 20)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+step = 0.1
+
+[node name="OverHeatValue" type="Label" parent="OverHeatPanel/VBoxContainer3" unique_id=550055005]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.7, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "0/100"
+horizontal_alignment = 1

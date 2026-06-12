@@ -39,3 +39,10 @@ fire={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+
+[window]
+
+size/viewport_width=2304.0
+size/viewport_height=1296.0
+stretch/mode="canvas_items"
+size/mode="fullscreen"

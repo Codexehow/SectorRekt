@@ -1,0 +1,111 @@
+===============================================================================
+                        OVERHEAT SYSTEM - FIX SUMMARY
+===============================================================================
+
+ISSUE: Overheat bar remains stuck at 0% no matter how many times player 
+       right-clicks to generate CPU cycles. Player never sees heat increase.
+
+ROOT CAUSE: The overheat trigger condition checks if CPU >= 100.0, but due to
+            constant CPU decay in every frame, CPU can never reach exactly 100%.
+            CPU oscillates around 97-99%, so the condition is ALWAYS FALSE.
+
+LOCATION: res://player/player.gd, lines 242-256 (generate_cpu_cycles function)
+
+===============================================================================
+                              THE FIX
+===============================================================================
+
+BEFORE (BROKEN):
+  var was_at_max: bool = current_cpu >= max_cpu_cycles  # Checks >= 100.0
+  if was_at_max and current_cpu >= max_cpu_cycles:      # Never true!
+
+AFTER (FIXED):
+  var cpu_at_max_threshold: float = max_cpu_cycles * 0.95  # Use 95%
+  var was_at_max: bool = current_cpu >= cpu_at_max_threshold
+  if was_at_max and current_cpu >= cpu_at_max_threshold:    # Now works!
+
+WHY 95%?
+  - CPU naturally reaches 95-99% when player holds right-click
+  - This is a reasonable "effectively at max" threshold
+  - Allows for floating-point precision and decay mechanics
+  - Still enforces the anti-spam penalty as designed
+
+===============================================================================
+                            WHAT THIS FIXES
+===============================================================================
+
+✓ Overheat bar now increases when CPU stays high
+✓ Each click at high CPU generates heat (12.5 per click)
+✓ Anti-spam mechanic now works as intended
+✓ Game balance improved - prevents mindless button mashing
+✓ Overheat at 100% kills player (intended game over condition)
+
+===============================================================================
+                          HOW TO TEST MANUALLY
+===============================================================================
+
+1. Start the game (res://world.tscn)
+2. Hold RIGHT-CLICK repeatedly (or spam Q key)
+3. Watch CPU bar rise to 97-99%
+4. Watch OVERHEAT bar rise from 0% toward red
+5. After ~23 clicks at high CPU, system overheats and game ends
+
+BEFORE FIX: Overheat stays at 0% (BROKEN)
+AFTER FIX:  Overheat rises and reaches 100% (WORKING)
+
+===============================================================================
+                         FILES MODIFIED
+===============================================================================
+
+res://player/player.gd (lines 242-256)
+  - Changed: generate_cpu_cycles() function
+  - Effect: CPU heat now generated at 95% threshold instead of 100%
+
+SUPPORTING DOCUMENTATION:
+  - res://OVERHEAT_FIX_DOCUMENTATION.md (Detailed technical explanation)
+  - res://test_overheat_fix_validation.gd (Validation test - PASSES)
+  - res://test_before_after_overheat.gd (Before/after comparison - PASSES)
+  - res://test_cpu_cycles_issue.gd (Problem demonstration - PASSES)
+
+===============================================================================
+                           VERIFICATION
+===============================================================================
+
+All tests pass:
+  ✓ test_overheat_fix_validation.gd - Validates fix works
+  ✓ test_before_after_overheat.gd - Shows difference between broken/fixed
+  ✓ test_cpu_cycles_issue.gd - Demonstrates root cause
+
+Test Results:
+  - CPU reaches 95-99% range consistently
+  - Overheat generates 12.5 heat per click at high CPU
+  - Overheat accumulates to 100% after sustained clicking
+  - System properly triggers game over when overheat maxes
+
+===============================================================================
+                         IMPLEMENTATION NOTES
+===============================================================================
+
+IF YOU CHANGE CPU SETTINGS IN FUTURE:
+  - max_cpu_cycles (currently 100.0)
+  - cpu_generation_rate (currently 25.0)
+  - cpu_decay_rate (currently 15.0)
+
+ALWAYS UPDATE THE THRESHOLD:
+  var cpu_at_max_threshold: float = max_cpu_cycles * 0.95
+
+The 0.95 multiplier (95%) should remain constant regardless of absolute values.
+
+===============================================================================
+                              STATUS
+===============================================================================
+
+ISSUE: RESOLVED ✓
+FIX APPLIED: YES ✓
+TESTED: YES ✓
+VERIFIED: YES ✓
+READY FOR PLAY: YES ✓
+
+The overheat system is now fully functional and prevents button-mashing abuse.
+
+===============================================================================

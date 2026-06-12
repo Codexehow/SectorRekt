@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://br8i0s57b0ygt" path="res://player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://c6j8l8k8k8k8k" path="res://level.tscn" id="2_level"]
 [ext_resource type="PackedScene" uid="uid://djuscyf502yor" path="res://ui/cpu_hud.tscn" id="3_cpu_hud"]
+[ext_resource type="Script" uid="uid://dkl2bgqqwquiy" path="res://ui/cpu_hud.gd" id="5_lquwl"]
 
 [node name="Main" type="Node2D" unique_id=1828119837]
 script = ExtResource("1_main")
@@ -13,4 +14,6 @@ script = ExtResource("1_main")
 [node name="Player" parent="." unique_id=496939080 groups=["player"] instance=ExtResource("1_player")]
 position = Vector2(576, 324)
 
-[node name="CPUHUD" parent="." unique_id=971897 instance=ExtResource("3_cpu_hud")]
+[node name="CPUHUD" type="CanvasLayer" parent="." unique_id=971897 instance=ExtResource("3_cpu_hud")]
+layer = 100
+script = ExtResource("5_lquwl")
