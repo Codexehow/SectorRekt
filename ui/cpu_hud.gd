@@ -14,6 +14,10 @@ var hull_bar: ProgressBar = null
 var blink_label: Label = null
 var blink_bar: ProgressBar = null
 
+# Movement bar references - Will be initialized in _ready() to handle runtime instantiation
+var movement_label: Label = null
+var movement_bar: ProgressBar = null
+
 # OverHeat panel references - Will be initialized in _ready() to handle runtime instantiation
 var overheat_label: Label = null
 var overheat_bar: ProgressBar = null
@@ -30,6 +34,9 @@ var controls_visible: bool = true
 var options_visible: bool = false
 
 func _ready() -> void:
+	# Add to group so ConsequenceEngine can find it
+	add_to_group("cpuhud")
+	
 	# Initialize UI element references
 	# This must be done manually since the scene is instantiated at runtime
 	_initialize_ui_elements()
@@ -47,6 +54,8 @@ func _ready() -> void:
 		player.shield_buffer_updated.connect(_on_shield_buffer_updated)
 		# Connect overheat signal
 		player.overheat_updated.connect(_on_overheat_updated)
+		# Connect movement signal
+		player.movement_updated.connect(_on_movement_updated)
 		
 		# Initialize bars with max values (with null checks)
 		if shield_bar:
@@ -67,6 +76,14 @@ func _ready() -> void:
 			print("Overheat bar initialized: max=", overheat_bar.max_value)
 		else:
 			print("ERROR: overheat_bar is null!")
+		
+		# Initialize movement bar (with null check)
+		if movement_bar:
+			movement_bar.max_value = player.max_movement
+			movement_bar.value = player.current_movement
+			print("Movement bar initialized: max=", movement_bar.max_value)
+		else:
+			print("WARNING: Movement bar not yet in scene (will be added to ResourcePanel later)")
 		
 		print("CPUHUD connected to Player signals")
 	else:
@@ -102,6 +119,8 @@ func _initialize_ui_elements() -> void:
 		shield_buffer_label = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/ShieldSection/ShieldBufferLabel")
 		hull_label = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/HullSection/HullLabel")
 		hull_bar = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/HullSection/HullBar")
+		movement_label = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/MovementSection/MovementLabel")
+		movement_bar = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/MovementSection/MovementBar")
 		blink_label = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/BlinkSection/BlinkLabel")
 		blink_bar = get_node_or_null("ResourcePanel/VBoxContainer/OtherResourcesContainer/BlinkSection/BlinkBar")
 	
@@ -213,6 +232,20 @@ func _on_overheat_updated(overheat_val: float) -> void:
 		overheat_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.0))  # Orange
 	else:
 		overheat_label.add_theme_color_override("font_color", Color.YELLOW)
+
+func _on_movement_updated(movement_val: float) -> void:
+	"""Update movement bar when movement system changes."""
+	if movement_bar and movement_label:
+		movement_bar.value = movement_val
+		movement_label.text = "Movement: %d/100" % int(movement_val)
+		
+		# Change color based on movement level (green when full, red when frozen)
+		if movement_val <= 0:
+			movement_bar.modulate = Color(1.0, 0.0, 0.0, 1.0)  # Red when frozen
+		elif movement_val < 30.0:
+			movement_bar.modulate = Color(1.0, 0.5, 0.0, 1.0)  # Orange when critical
+		else:
+			movement_bar.modulate = Color.WHITE  # White when normal
 
 func _input(event: InputEvent) -> void:
 	"""Handle toggle controls with C key."""

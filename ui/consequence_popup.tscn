@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/consequence_popup.gd" id="1_2abcd"]
+
+[node name="ConsequencePopup" type="Control"]
+layout_mode=3
+anchors_layout_preset=15
+script=ExtResource("1_2abcd")

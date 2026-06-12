@@ -9,6 +9,7 @@ var cpu_hud_scene: PackedScene = preload("res://ui/cpu_hud.tscn")
 var h_ui: CanvasLayer
 var status_ui: CanvasLayer
 var cpu_hud: CanvasLayer
+var consequence_engine: ConsequenceEngine
 
 func _ready() -> void:
 	# Connect player signals
@@ -33,6 +34,10 @@ func _ready() -> void:
 	if ui_scene:
 		h_ui = ui_scene.instantiate() as CanvasLayer
 		add_child(h_ui)
+	
+	# Instance consequence engine
+	consequence_engine = ConsequenceEngine.new()
+	add_child(consequence_engine)
 	
 	if generator:
 		generator.level_generated.connect(spawn_initial_enemies)

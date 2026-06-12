@@ -52,6 +52,15 @@ var shield_low_threshold: float = 10.0  # Shield percentage threshold for buffer
 var overheat: float = 0.0
 var overheat_max: float = 100.0
 var overheat_decay_rate: float = 8.0  # Points per second when CPU drops below 100%
+var overheat_consequence_triggered: bool = false  # Gate to prevent re-emission every frame
+
+# === MOVEMENT SYSTEM ===
+# Movement bar acts as a resource that can be consumed as a consequence
+# When at 0%, the tank cannot move (frozen in place)
+# Regenerates over time when above 0%
+@export var max_movement: float = 100.0
+var current_movement: float = 100.0
+var movement_regen_rate: float = 15.0  # Points per second
 
 @export var is_corrupted: bool = false
 
@@ -60,6 +69,8 @@ signal cpu_updated(current: float, weapon: float, shield: float, blink: float)
 signal player_damaged(hull: float, shield: float)
 signal shield_buffer_updated(buffer: float)
 signal overheat_updated(value: float)
+signal movement_updated(value: float)
+signal overheat_critical  # Emitted when overheat reaches 100%
 signal player_died
 signal player_won
 
@@ -153,6 +164,12 @@ func _physics_process(delta: float) -> void:
 		weapon_charge = min(weapon_charge + current_cpu * WEAPON_ALLOC * delta * 2.5, 100.0)
 		blink_charge = min(blink_charge + current_cpu * BLINK_ALLOC * delta * 2.5, 100.0)
 	
+	# === MOVEMENT REGENERATION ===
+	# Movement bar regenerates over time unless at 0% (frozen)
+	if current_movement < max_movement:
+		current_movement = min(current_movement + movement_regen_rate * delta, max_movement)
+		movement_updated.emit(current_movement)
+	
 	# === TANK MOVEMENT ===
 	var turn_input: float = 0.0
 	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
@@ -176,7 +193,9 @@ func _physics_process(delta: float) -> void:
 	
 	rotation += turn_input * turn_speed * delta
 	var direction: Vector2 = Vector2.RIGHT.rotated(rotation)
-	velocity = direction * current_speed * (1.0 + MOVEMENT_ALLOC * (current_cpu / max_cpu_cycles))
+	# Apply movement multiplier based on current_movement bar (0% = frozen, 100% = normal)
+	var movement_multiplier: float = current_movement / max_movement
+	velocity = direction * current_speed * (1.0 + MOVEMENT_ALLOC * (current_cpu / max_cpu_cycles)) * movement_multiplier
 	
 	move_and_slide()
 	
@@ -197,15 +216,20 @@ func _physics_process(delta: float) -> void:
 	# Each click at 100% CPU adds heat directly to the overheat bar
 	# Overheat decays when CPU drops below 100% or when the player spends CPU
 	# This prevents mindless button mashing by penalizing sustained high CPU usage
+	
+	# CRITICAL FIX: Check overheat BEFORE applying decay on the same frame
+	# If we decay first, overheat might drop below 100 before we check it
+	# Signal must fire when overheat is truly >= 100, not after it's been reduced
+	if overheat >= overheat_max and not overheat_consequence_triggered:
+		print("SYSTEM CRITICAL: Overheating critical - triggering consequence!")
+		overheat_consequence_triggered = true  # Set gate to prevent re-emission
+		overheat_critical.emit()
+	
+	# Now apply decay (after checking if at critical level)
 	if current_cpu < max_cpu_cycles:
 		# Decay overheat when not at max CPU
 		# This allows the player to cool down by using resources or waiting for CPU to decay
 		overheat = max(overheat - overheat_decay_rate * delta, 0.0)
-	
-	# Game over: System overheats from sustained abuse
-	if overheat >= overheat_max:
-		print("SYSTEM CRITICAL: Overheating meltdown!")
-		die()
 	
 	cpu_updated.emit(current_cpu, weapon_charge, shield_charge, blink_charge)
 	shield_buffer_updated.emit(shield_buffer)
@@ -275,6 +299,19 @@ func blink_drive() -> void:
 	var direction: Vector2 = Vector2.RIGHT.rotated(rotation)
 	global_position += direction * blink_distance
 	blink_charge = 0.0
+
+# === CONSEQUENCE SYSTEM ===
+func apply_movement_lockdown() -> void:
+	"""Consequence: Movement Lockdown - Set movement to 0"""
+	current_movement = 0.0
+	movement_updated.emit(current_movement)
+	print("[CONSEQUENCE] Movement Lockdown Applied - Tank frozen!")
+
+func apply_blink_reset() -> void:
+	"""Consequence: Blink Drive Reset - Set blink charge to 0"""
+	blink_charge = 0.0
+	cpu_updated.emit(current_cpu, weapon_charge, shield_charge, blink_charge)
+	print("[CONSEQUENCE] Blink Drive Reset Applied - Blink charge depleted!")
 
 func trigger_hallucination(type: String = "glitch") -> void:
 	hallucination_triggered.emit(type)

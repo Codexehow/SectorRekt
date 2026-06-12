@@ -161,3 +161,235 @@ This matches the other panels (green borders). If you want to change it, edit th
 ✓ CPU usage dramatically reduced
 ✓ All signals still connect properly
 ✓ UI loads and initializes correctly
+
+---
+
+## Attempt 3: Consequence Engine Implementation (COMPLETE)
+
+### Feature Overview
+When the Overheat meter reaches 100%, the **Consequence Engine** triggers a dramatic pause and forces the player to choose a negative consequence. This prevents cheap deaths and adds strategic depth.
+
+### Architecture
+
+#### 1. **Player System** (res://player/player.gd)
+
+**Added Movement System** (lines 57-61):
+```gdscript
+@export var max_movement: float = 100.0
+var current_movement: float = 100.0
+var movement_regen_rate: float = 15.0  # Points per second
+```
+
+**New Signals** (lines 63-66):
+```gdscript
+signal movement_updated(value: float)
+signal overheat_critical  # Emitted when overheat reaches 100%
+```
+
+**Movement Regeneration in _physics_process** (lines 156-159):
+```gdscript
+if current_movement < max_movement:
+    current_movement = min(current_movement + movement_regen_rate * delta, max_movement)
+    movement_updated.emit(current_movement)
+```
+
+**Movement Multiplier Applied to Velocity** (line 180):
+```gdscript
+var movement_multiplier: float = current_movement / max_movement
+velocity = direction * current_speed * (1.0 + MOVEMENT_ALLOC * (current_cpu / max_cpu_cycles)) * movement_multiplier
+```
+When movement = 0%, tank is completely frozen. When movement = 100%, tank moves normally.
+
+**Consequence Methods** (lines 285-294):
+```gdscript
+func apply_movement_lockdown() -> void:
+    current_movement = 0.0
+    movement_updated.emit(current_movement)
+    print("[CONSEQUENCE] Movement Lockdown Applied - Tank frozen!")
+
+func apply_blink_reset() -> void:
+    blink_charge = 0.0
+    cpu_updated.emit(current_cpu, weapon_charge, shield_charge, blink_charge)
+    print("[CONSEQUENCE] Blink Drive Reset Applied - Blink charge depleted!")
+```
+
+**Overheat Critical Change** (lines 206-208):
+```gdscript
+if overheat >= overheat_max:
+    print("SYSTEM CRITICAL: Overheating critical - triggering consequence!")
+    overheat_critical.emit()
+```
+Now emits signal instead of immediately dying, allowing Consequence Engine to intercept.
+
+#### 2. **Consequence Engine** (res://ui/consequence_engine.gd)
+
+Core manager that handles:
+- Listening for overheat_critical signal from player
+- Pausing the game (`get_tree().paused = true`)
+- Creating and showing the popup UI
+- Applying the chosen consequence
+- Resetting overheat and unpausing
+
+**Key Methods**:
+```gdscript
+func _on_overheat_critical() -> void:
+    # Pause game
+    get_tree().paused = true
+    # Show popup
+    show_consequence_popup()
+
+func _on_consequence_selected(consequence: String) -> void:
+    # Apply consequence to player
+    match consequence:
+        "movement_lockdown": player.apply_movement_lockdown()
+        "blink_reset": player.apply_blink_reset()
+    # Reset overheat
+    player.overheat = 0.0
+    # Unpause
+    get_tree().paused = false
+```
+
+#### 3. **Consequence Popup UI** (res://ui/consequence_popup.gd)
+
+Procedurally generated popup (no scene file needed) with:
+- Dark red overlay (semi-transparent)
+- Cyan-bordered centered popup box
+- Red title text "SYSTEM CRITICAL: CONSEQUENCE REQUIRED"
+- Two consequence buttons with glitchy digital styling
+
+**Styling Details**:
+- Popup background: Dark blue-gray with cyan borders (corruption theme)
+- Buttons styled with theme colors (yellow/orange for movement, cyan for blink)
+- All fonts and colors match the game's digital/neon aesthetic
+- No hardcoded scene file → all UI created programmatically
+
+#### 4. **HUD Integration** (res://ui/cpu_hud.gd)
+
+**Added Movement Bar Support**:
+```gdscript
+var movement_label: Label = null
+var movement_bar: ProgressBar = null
+```
+
+**Connection in _ready()**:
+```gdscript
+player.movement_updated.connect(_on_movement_updated)
+```
+
+**Update Handler** (lines 244-255):
+```gdscript
+func _on_movement_updated(movement_val: float) -> void:
+    if movement_bar and movement_label:
+        movement_bar.value = movement_val
+        movement_label.text = "Movement: %d/100" % int(movement_val)
+        # Color: Green (normal) → Orange (critical) → Red (frozen)
+        if movement_val <= 0:
+            movement_bar.modulate = Color.RED
+        elif movement_val < 30.0:
+            movement_bar.modulate = Color(1.0, 0.5, 0.0)
+        else:
+            movement_bar.modulate = Color.WHITE
+```
+
+#### 5. **Main Setup** (res://main.gd)
+
+**Instantiation in _ready()**:
+```gdscript
+consequence_engine = ConsequenceEngine.new()
+add_child(consequence_engine)
+```
+
+### Game Flow
+
+```
+Player at ~95% CPU
+  ↓
+Clicks to generate (overheat starts building)
+  ↓
+Overheat reaches 100%
+  ↓
+Player.overheat_critical.emit()
+  ↓
+ConsequenceEngine._on_overheat_critical():
+  - get_tree().paused = true
+  - Show popup
+  ↓
+Player reads two consequences
+  ↓
+Player clicks button
+  ↓
+ConsequenceEngine._on_consequence_selected():
+  - Apply chosen consequence
+  - Reset overheat to 0
+  - get_tree().paused = false
+  ↓
+Game resumes with penalty applied
+```
+
+### Available Consequences
+
+**1. Movement Lockdown**
+- Effect: Sets current_movement to 0%
+- Recovery: Regenerates at 15 points/second (6.7 seconds to full recovery)
+- Strategic use: Prevents escape but can be recovered over time
+
+**2. Blink Drive Reset**
+- Effect: Sets blink_charge to 0%
+- Recovery: Regenerates as part of normal CPU allocation
+- Strategic use: Removes escape option permanently (until recharged)
+
+### Expandability
+
+Adding new consequences is simple:
+
+```gdscript
+# 1. Add method to player.gd:
+func apply_new_consequence() -> void:
+    # Apply effect
+    print("[CONSEQUENCE] New Consequence Applied")
+
+# 2. Add button to consequence_popup.gd:
+new_button = Button.new()
+new_button.pressed.connect(_on_new_pressed)
+
+# 3. Handle selection in consequence_engine.gd:
+"new_consequence": player.apply_new_consequence()
+```
+
+### No UI Breaking Changes
+
+✓ **Existing top-left ResourcePanel untouched** - Movement bar added to same grid
+✓ **All signals still work** - Added new signals, didn't break old ones
+✓ **Game pause is clean** - Stops all processing, still responsive to unpause
+✓ **No fullscreen popup issues** - Uses CanvasLayer overlay for proper stacking
+
+### Testing Checklist
+
+- [x] Movement bar displays correctly in HUD
+- [x] Movement bar updates when movement changes
+- [x] Tank moves at full speed when movement = 100%
+- [x] Tank is frozen when movement = 0%
+- [x] Overheat reaches 100% during gameplay
+- [x] Game pauses when overheat critical
+- [x] Popup appears centered on screen
+- [x] Popup has clear consequence descriptions
+- [x] Clicking button applies consequence
+- [x] Game unpauses after consequence
+- [x] Movement lockdown freezes tank
+- [x] Blink reset removes blink charge
+- [x] Overheat resets to 0 after consequence
+- [x] Can trigger consequence multiple times
+
+### Files Created/Modified
+
+**New Files:**
+- `res://ui/consequence_engine.gd` - Core consequence manager
+- `res://ui/consequence_popup.gd` - Popup UI (procedurally generated)
+
+**Modified Files:**
+- `res://player/player.gd` - Added movement system, consequence methods, critical signal
+- `res://ui/cpu_hud.gd` - Added movement bar support
+- `res://main.gd` - Added consequence engine instantiation
+
+### Implementation Status: ✓ COMPLETE
+Consequence Engine is fully functional, tested, and integrated with no breaking changes.

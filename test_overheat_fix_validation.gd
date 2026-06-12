@@ -66,4 +66,3 @@ func test_overheat_generates_with_fix() -> void:
 	assert(overheat_triggered, "ERROR: Overheat should trigger with fix")
 	assert(max_overheat_reached > 0.0, "ERROR: Overheat should increase")
 	print("\nOVERHEAT FIX VALIDATED Heat generation works\n")
-
