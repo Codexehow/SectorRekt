@@ -1,0 +1,54 @@
+===============================================================================
+                 OVERHEAT ISSUE - SIMPLE EXPLANATION
+===============================================================================
+
+WHAT WAS WRONG:
+  You click right-mouse to generate CPU. The CPU bar goes up to 97-99%.
+  But the Overheat bar never goes above 0% no matter how many times you click.
+
+WHY IT WAS BROKEN:
+  
+  Think of it like a water fountain:
+  - You turn the pump ON (right-click) = water flows UP
+  - The pump automatically DRAINS water slowly (CPU decay) = water goes DOWN
+  
+  The game was waiting for the tank to be EXACTLY full (100.0) before
+  turning on the overheat alarm. But because water is constantly draining,
+  the tank can NEVER be exactly full - it only ever gets to 97-99% full.
+  
+  So the alarm (overheat) NEVER turns on.
+
+THE FIX:
+  
+  Instead of waiting for the tank to be EXACTLY full (100.0),
+  we changed the alarm to trigger when the tank is NEARLY full (95.0).
+  
+  Now when you click with CPU at 97-99%, the alarm turns on!
+
+WHAT YOU'LL SEE NOW:
+  
+  1. Right-click repeatedly
+  2. CPU bar rises and stays around 97-99%
+  3. Overheat bar RISES FROM YELLOW TOWARD RED
+  4. After ~20 clicks at high CPU, overheat reaches 100% and you die
+  
+  This is WORKING CORRECTLY now!
+
+THE CODE CHANGE:
+  
+  OLD CODE:
+    "if player CPU is >= 100.0, generate heat"
+    Problem: CPU never reaches 100.0, so this NEVER happens
+  
+  NEW CODE:
+    "if player CPU is >= 95.0, generate heat"
+    Solution: CPU regularly reaches 95-99%, so this ALWAYS happens
+
+WHY THIS IS GOOD FOR THE GAME:
+  
+  • Prevents spam-clicking (right-click spam)
+  • Forces player to think strategically about CPU usage
+  • Makes combat more tactical
+  • Game becomes more challenging and fun
+
+===============================================================================

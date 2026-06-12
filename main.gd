@@ -7,8 +7,8 @@ var enemy_scene: PackedScene = preload("res://basic_virus.tscn")
 var ui_scene: PackedScene = preload("res://ui/hallucination_ui.tscn")
 var cpu_hud_scene: PackedScene = preload("res://ui/cpu_hud.tscn")
 var h_ui: CanvasLayer
-var cpu_hud: CanvasLayer
 var status_ui: CanvasLayer
+var cpu_hud: CanvasLayer
 
 func _ready() -> void:
 	# Connect player signals

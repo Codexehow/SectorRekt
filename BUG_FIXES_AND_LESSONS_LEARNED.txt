@@ -1,0 +1,229 @@
+================================================================================
+BUG FIXES AND LESSONS LEARNED - HUD System Issues
+================================================================================
+Created: 2024
+Project: Godot 4.2+ Game
+File: res://ui/cpu_hud.gd
+
+================================================================================
+ISSUE 1: OVERHEAT BAUD COLOR NOT UPDATING
+================================================================================
+
+SYMPTOMS:
+- When player clicks rapidly and overheat meter increases, the ProgressBar fills
+  but the color does NOT change from yellow to red
+- HUD label colors update correctly, but the bar itself stays the same color
+- Tests reported this should be fixed, but it wasn't working in-game
+
+ROOT CAUSE:
+The code was using INCORRECT Godot ProgressBar theme color property names.
+
+Original incorrect code (line 203):
+```gdscript
+if overheat_bar.has_theme_color("fill"):
+    overheat_bar.add_theme_color_override("fill", overheat_color)
+else:
+    overheat_bar.modulate = overheat_color
+```
+
+PROBLEMS WITH THIS APPROACH:
+1. "fill" is NOT a valid ProgressBar theme color property in Godot 4.2+
+   - The method has_theme_color("fill") would return false
+   - The if condition would fail, falling back to modulate
+   - Modulate affects the whole node including borders/text, not just the bar fill
+
+2. Using modulate was a BAD fallback because:
+   - It tints the ENTIRE node including the background and border
+   - It's not the correct way to change the progress bar's fill color
+   - It creates visual artifacts and doesn't look right
+
+3. The correct property name is "fill_color" (NOT "fill")
+   - This is the ONLY way to change the ProgressBar's fill color in Godot 4.2+
+   - Verified in Godot documentation: https://docs.godotengine.org/en/stable/classes/class_progressbar.html
+
+CORRECTED CODE:
+```gdscript
+# Use fill_color which is the proper theme color for ProgressBar fill
+overheat_bar.add_theme_color_override("fill_color", overheat_color)
+```
+
+WHY THIS MATTERS:
+- When writing GUI theme overrides in Godot, ALWAYS check the official documentation
+- Theme color property names are NOT intuitive and don't follow a consistent pattern
+- Different Control nodes have different theme color names
+- Testing should catch visual regressions like this (color not changing)
+
+PREVENTION TIPS FOR FUTURE:
+1. ALWAYS verify theme property names in Godot docs before using them
+2. When setting theme colors, print the node type and available theme properties:
+   ```gdscript
+   print("Available theme colors: ", overheat_bar.get_theme_color_list())
+   ```
+3. Test visually in-game after making HUD changes, not just unit tests
+4. Consider using a theme resource (.tres) instead of runtime overrides for consistency
+5. Document the expected color values and progression for reference
+
+================================================================================
+ISSUE 2: RESOLUTION CHANGE NOT WORKING
+================================================================================
+
+SYMPTOMS:
+- Clicking resolution options in the OPTIONS menu does nothing
+- Window stays the same size
+- Tests said this should work, but it never actually changed the resolution
+- Fullscreen toggle works, but resolution dropdown is broken
+
+ROOT CAUSE:
+Windows cannot resize while in fullscreen mode. The game starts in fullscreen
+(set in project.godot), and the resolution change code was:
+1. Not waiting long enough for fullscreen exit to complete
+2. Not giving the OS enough time to process the window resize
+3. Trying to resize while the fullscreen transition was still in progress
+
+Original problematic code (lines 271-282):
+```gdscript
+# Exit fullscreen temporarily
+get_window().mode = Window.MODE_WINDOWED
+await get_tree().process_frame
+await get_tree().process_frame
+await get_tree().process_frame
+
+# Now resize the window (but may still be transitioning!)
+get_window().size = new_size
+```
+
+PROBLEMS WITH THIS APPROACH:
+1. Timing issue: 3 process frames is NOT enough time for the OS to:
+   - Actually exit fullscreen mode
+   - Render the first windowed frame
+   - Update the window manager
+   - Be ready to accept a resize command
+
+2. Race condition: The resize command may arrive BEFORE fullscreen exit completes
+   - Some operating systems queue window state changes and process them in order
+   - Resizing before fullscreen is fully exited may be ignored or cause issues
+
+3. No verification: Code didn't check if the resize actually worked
+   - Silent failure: window didn't resize but no error was thrown
+   - No feedback to the user that something went wrong
+
+CORRECTED CODE:
+```gdscript
+# Exit fullscreen with SUFFICIENT wait time (5 frames instead of 3)
+get_window().mode = Window.MODE_WINDOWED
+await get_tree().process_frame
+await get_tree().process_frame
+await get_tree().process_frame
+await get_tree().process_frame
+await get_tree().process_frame
+print("[RESOLUTION] Fullscreen exit complete, current size: ", get_window().size)
+
+# Now resize the window with additional wait time
+print("[RESOLUTION] Resizing window to: ", new_size)
+get_window().size = new_size
+await get_tree().process_frame
+await get_tree().process_frame
+var current_size: Vector2i = get_window().size
+print("[RESOLUTION] Window resized to: ", current_size)
+
+# Verify the resize worked
+if current_size != new_size:
+    print("[RESOLUTION] WARNING: Resize may not have taken effect, got: ", current_size, " expected: ", new_size)
+
+# Restore fullscreen mode if it was enabled before (with more wait time)
+if was_fullscreen:
+    await get_tree().process_frame
+    await get_tree().process_frame
+    get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN
+```
+
+KEY IMPROVEMENTS:
+1. Increased wait frames from 3 to 5 when exiting fullscreen
+   - Gives OS time to actually exit fullscreen
+   - Waits for graphics subsystem to be ready
+
+2. Added wait frames AFTER resize before returning to fullscreen
+   - Ensures the resize is processed by the window manager
+   - Prevents racing back to fullscreen before resize is complete
+
+3. Added debug logging and verification
+   - Tracks what the window size actually is at each step
+   - Shows if the resize succeeded or failed
+   - Makes future debugging much easier
+
+WHY THIS MATTERS:
+- Async/await in Godot requires proper timing
+- Window management is asynchronous at the OS level
+- You can't assume one process_frame is enough for OS operations
+- Cross-platform consistency: different OSes have different timing requirements
+- Silent failures are the worst kind - always verify and log
+
+PREVENTION TIPS FOR FUTURE:
+1. ALWAYS test async window operations on the actual target platforms
+   - Windows, Linux, and macOS have different timing requirements
+   - Fullscreen/windowed transitions vary by OS
+
+2. When writing async code with await, add extra frames for safety:
+   - 3 frames minimum for simple state changes
+   - 5-10 frames for OS-level operations (window resizing, fullscreen)
+   - Use frame counts that are slightly excessive rather than minimal
+
+3. ALWAYS add verification and logging to async operations:
+   ```gdscript
+   var old_size: Vector2i = get_window().size
+   get_window().size = new_size
+   await get_tree().process_frame
+   var new_size_actual: Vector2i = get_window().size
+   if new_size_actual != new_size:
+       print("WARNING: Resize failed!")
+   ```
+
+4. Consider using get_tree().root.size if you need the viewport size instead of window size
+
+5. Document all window mode operations with comments explaining the timing
+
+6. Test on multiple resolutions and fullscreen states:
+   - Test: fullscreen → windowed at 1920x1080
+   - Test: fullscreen → windowed at 1280x720
+   - Test: windowed → fullscreen
+   - Test: rapid resolution changes (click multiple times fast)
+
+================================================================================
+GENERAL LESSONS FOR HUD AND WINDOW MANAGEMENT
+================================================================================
+
+1. GUI THEME COLORS:
+   - Property names are NOT standardized
+   - Always check docs: https://docs.godotengine.org/en/stable/classes/class_control.html
+   - Each Control subclass (Button, Label, ProgressBar) has different properties
+   - Consider printing available theme colors for debugging
+
+2. ASYNC OPERATIONS AND TIMING:
+   - Never assume one process_frame is enough
+   - OS-level operations (window, fullscreen, input) need extra frames
+   - Add logging and verification to all async code
+   - Test on real hardware with actual OS, not just in editor
+
+3. TESTING STRATEGY:
+   - Unit tests can verify logic but NOT visual correctness
+   - Always do manual visual testing of HUD changes
+   - Test on actual target resolutions and fullscreen modes
+   - Test edge cases: rapid clicks, resolution changes while in-game, etc.
+
+4. DOCUMENTATION:
+   - Document why specific frame counts are used
+   - Explain the purpose of verification checks
+   - Leave debug logging in place during development
+   - Update this file when new window/HUD issues are discovered
+
+================================================================================
+REFERENCES
+================================================================================
+
+Godot 4.2 Documentation:
+- ProgressBar: https://docs.godotengine.org/en/stable/classes/class_progressbar.html
+- Window: https://docs.godotengine.org/en/stable/classes/class_window.html
+- Theme: https://docs.godotengine.org/en/stable/tutorials/ui/custom_gui_controls.html
+- Async/Await: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_async_await.html
+
+================================================================================

@@ -45,12 +45,21 @@ var shield_buffer: float = 0.0
 var shield_buffer_recharge_rate: float = 1.0  # Points per second when shields are low
 var shield_low_threshold: float = 10.0  # Shield percentage threshold for buffer recharge
 
+# === OVERHEAT SYSTEM ===
+# Anti-spam mechanic: System overheats when CPU is at 100% for sustained period
+# Prevents mindless button mashing by forcing smart resource management
+# Bar fills from yellow to red (0-100), decays when CPU drops below max or player spends CPU
+var overheat: float = 0.0
+var overheat_max: float = 100.0
+var overheat_decay_rate: float = 8.0  # Points per second when CPU drops below 100%
+
 @export var is_corrupted: bool = false
 
 signal hallucination_triggered(type: String)
 signal cpu_updated(current: float, weapon: float, shield: float, blink: float)
 signal player_damaged(hull: float, shield: float)
 signal shield_buffer_updated(buffer: float)
+signal overheat_updated(value: float)
 signal player_died
 signal player_won
 
@@ -73,13 +82,13 @@ func take_damage(amount: float, source: String = "unknown") -> void:
 		var shield_damage: float = min(amount, current_shield)
 		current_shield -= shield_damage
 		amount -= shield_damage
-		print("Shield absorbed ", shield_damage, " damage from ", source)
+		#print("Shield absorbed ", shield_damage, " damage from ", source)  # Disabled: too spammy
 		show_impact_glimmer()  # Show glimmer ONLY when shields are active
 		shield_damage_timer = 0.0  # Reset shield regen timer on shield damage
 	
 	if amount > 0 and current_hull > 0:
 		current_hull -= amount
-		print("Hull took ", amount, " damage from ", source)
+		#print("Hull took ", amount, " damage from ", source)  # Disabled: too spammy
 		shield_damage_timer = 0.0  # Reset shield regen timer on hull damage too
 	
 	player_damaged.emit(current_hull, current_shield)
@@ -178,19 +187,36 @@ func _physics_process(delta: float) -> void:
 			var collider: Node = collision.get_collider()
 			# Check if colliding with tilemap or static walls
 			if collider is TileMapLayer or (collider is StaticBody2D):
-				take_damage(0.5 * delta, "wall")
+				take_damage(4 * delta, "wall")
 	
 	# Weapon aiming (Pivot only)
 	$WeaponPivot.look_at(get_global_mouse_position())
-
+	
+	# === OVERHEAT SYSTEM (Anti-Spam Mechanic) ===
+	# Overheat is generated when the player clicks while CPU is already at 100%
+	# Each click at 100% CPU adds heat directly to the overheat bar
+	# Overheat decays when CPU drops below 100% or when the player spends CPU
+	# This prevents mindless button mashing by penalizing sustained high CPU usage
+	if current_cpu < max_cpu_cycles:
+		# Decay overheat when not at max CPU
+		# This allows the player to cool down by using resources or waiting for CPU to decay
+		overheat = max(overheat - overheat_decay_rate * delta, 0.0)
+	
+	# Game over: System overheats from sustained abuse
+	if overheat >= overheat_max:
+		print("SYSTEM CRITICAL: Overheating meltdown!")
+		die()
+	
 	cpu_updated.emit(current_cpu, weapon_charge, shield_charge, blink_charge)
 	shield_buffer_updated.emit(shield_buffer)
+	overheat_updated.emit(overheat)
 
 func _input(event: InputEvent) -> void:
-	# CPU Generation on click (Q or Right Click)
+	# === CPU GENERATION ===
+	# Generate CPU on right-click or Q key
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		generate_cpu_cycles()
-	if event is InputEventKey and event.pressed and event.keycode == KEY_Q:
+	if event is InputEventKey and event.keycode == KEY_Q and event.pressed:
 		generate_cpu_cycles()
 	
 	# Primary Attack (Fire Thunderbolt)
@@ -215,7 +241,18 @@ func _input(event: InputEvent) -> void:
 
 func generate_cpu_cycles() -> void:
 	# Generate CPU on click (Q or Right Mouse Button)
+	# NOTE: Use epsilon threshold (95%) instead of exact max (100%) because CPU constantly decays
+	# and can never reach exactly 100% in continuous gameplay. At ~95% and above, we treat as "at max"
+	var cpu_at_max_threshold: float = max_cpu_cycles * 0.95  # 95% threshold
+	var was_at_max: bool = current_cpu >= cpu_at_max_threshold
 	current_cpu = min(current_cpu + cpu_generation_rate, max_cpu_cycles)
+	
+	# If we're already at max CPU (95%+), this click generates heat instead
+	if was_at_max and current_cpu >= cpu_at_max_threshold:
+		var heat_from_click: float = cpu_generation_rate * 0.5  # Each click adds 50% of generation as heat
+		overheat = min(overheat + heat_from_click, overheat_max)
+		print("[OVERHEAT] Click at high CPU (%.0f%%)! Added %.1f heat. Total: %.1f/%.1f" % [current_cpu, heat_from_click, overheat, overheat_max])
+	
 	print("CPU Generated! Current: ", int(current_cpu), " / ", int(max_cpu_cycles))
 
 func fire_thunderbolt() -> void:
