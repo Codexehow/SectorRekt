@@ -12,11 +12,13 @@ func trigger_hallucination(type: String, duration: float = 3.0) -> void:
 	var texture_path: String = ""
 	match type:
 		"eyes":
-			texture_path = "res://assets/hallucination_eyes.png"
-		"shadow":
-			texture_path = "res://assets/hallucination_shadow.png"
+			texture_path = "res://assets/generated/hallucination_fire_eyes_frame_0.png"
+		"glitch":
+			texture_path = "res://assets/generated/hallucination_digital_nightmare_frame_0.png"
+		"test":
+			texture_path = "res://assets/generated/hallucination_test_frame_0.png"
 		_:
-			texture_path = "res://assets/hallucination_eyes.png" # Default
+			texture_path = "res://assets/generated/hallucination_test_frame_0.png" # Default
 	
 	var tex: Texture2D = load(texture_path)
 	if tex:

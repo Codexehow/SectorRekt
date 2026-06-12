@@ -1,0 +1,43 @@
+[gd_resource type="TileSet" format=3 uid="uid://cqmb468v51vmb"]
+
+[ext_resource type="Texture2D" uid="uid://c0jbjcn0wi0jj" path="res://assets/generated/v01a_floor_frame_0.png" id="1_yrtr3"]
+[ext_resource type="Texture2D" uid="uid://lujhshq3oxmo" path="res://assets/generated/v01a_wall_frame_0.png" id="2_08w2r"]
+[ext_resource type="Texture2D" uid="uid://cms6wvbqrow1g" path="res://assets/generated/v01a_exit_frame_0.png" id="3_e45rr"]
+[ext_resource type="Texture2D" uid="uid://bgooknmicmnan" path="res://assets/generated/destructible_wall_frame_0.png" id="4_e45rr"]
+[ext_resource type="Texture2D" uid="uid://28hv4lrvg65k" path="res://assets/generated/cyber_background_frame_0.png" id="5_e45rr"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_e7ogk"]
+texture = ExtResource("1_yrtr3")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_f070m"]
+texture = ExtResource("2_08w2r")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2pxpo"]
+texture = ExtResource("3_e45rr")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bby4c"]
+texture = ExtResource("4_e45rr")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-32, -32, 32, -32, 32, 32, -32, 32)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_032fi"]
+texture = ExtResource("5_e45rr")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[resource]
+tile_size = Vector2i(64, 64)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_e7ogk")
+sources/1 = SubResource("TileSetAtlasSource_f070m")
+sources/2 = SubResource("TileSetAtlasSource_2pxpo")
+sources/3 = SubResource("TileSetAtlasSource_bby4c")
+sources/4 = SubResource("TileSetAtlasSource_032fi")
