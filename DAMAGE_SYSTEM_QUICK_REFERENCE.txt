@@ -1,0 +1,154 @@
+================================================================================
+                    PLAYER DAMAGE SYSTEM - QUICK REFERENCE
+================================================================================
+
+VARIABLES (in Inspector)
+  max_hull       = 100.0  (Player health)
+  max_shield     = 100.0  (Shield protection layer)
+
+CURRENT STATUS (read-only in code)
+  current_hull   (0-100)
+  current_shield (0-100)
+
+================================================================================
+                           DAMAGE FLOW DIAGRAM
+================================================================================
+
+                            Incoming Damage (amount)
+                                    |
+                                    v
+                         Is Shield > 0?
+                           /              \
+                         YES              NO
+                          |                |
+                          v                v
+                    Remove from         Direct to Hull
+                      Shield             (amount damage)
+                          |
+                          v
+                    Any Overflow?
+                      /        \
+                    YES        NO
+                     |          |
+                     v          v
+                  To Hull    Damage Absorbed
+                    |
+                    v
+               Hull reduced
+               
+               Hull <= 0? → PLAYER DIES
+
+================================================================================
+                        DAMAGE SOURCES IN GAME
+================================================================================
+
+1. WALL COLLISION
+   When:       Player slides against TileMapLayer or StaticBody2D
+   Damage:     0.5 HP per second (while sliding)
+   Triggered:  Automatic in _physics_process()
+   
+2. ENEMY COLLISION
+   When:       Enemy touches DamageZone (Area2D radius 30)
+   Damage:     25 HP per touch
+   Triggered:  _on_body_entered() → body_entered signal
+   Effect:     Also causes camera shake (intensity 5)
+
+3. CUSTOM
+   Usage:      player.take_damage(amount, "source_name")
+   Example:    player.take_damage(50.0, "boss_attack")
+
+================================================================================
+                           SIGNALS (FOR UI)
+================================================================================
+
+player_damaged(hull: float, shield: float)
+  → Emitted after EVERY damage event
+  → Use to update health bars in real-time
+  
+player_died
+  → Emitted when hull reaches 0
+  → Use to show game-over screen
+
+Example listener:
+    func _ready():
+        player.player_damaged.connect(_on_damage)
+    
+    func _on_damage(hull, shield):
+        health_bar.value = hull
+        shield_bar.value = shield
+
+================================================================================
+                        FORMULA EXAMPLES
+================================================================================
+
+EXAMPLE 1: Shield Absorbs All
+  Initial: Shield 50, Hull 100
+  Damage:  30
+  Result:  Shield 20, Hull 100 ✓
+
+EXAMPLE 2: Shield Breaks, Hull Takes Remainder
+  Initial: Shield 30, Hull 100
+  Damage:  50
+  Result:  Shield 0, Hull 80 ✓ (30 absorbed + 20 to hull)
+
+EXAMPLE 3: No Shield
+  Initial: Shield 0, Hull 100
+  Damage:  25
+  Result:  Shield 0, Hull 75 ✓
+
+EXAMPLE 4: Player Dies
+  Initial: Shield 10, Hull 20
+  Damage:  35
+  Result:  Shield 0, Hull 0 → player_died signal emitted ✓
+
+================================================================================
+                       IMPLEMENTATION CHECKLIST
+================================================================================
+
+✓ Health/Shield variables created
+✓ take_damage() function implemented
+✓ Shield-first damage absorption logic
+✓ Hull damage on overflow
+✓ Death detection (hull <= 0)
+✓ Wall collision detection in _physics_process()
+✓ Enemy collision detection via DamageZone Area2D
+✓ Signals: player_damaged, player_died
+✓ Scene updated: DamageZone node added
+✓ Signal connection in scene: body_entered → _on_body_entered
+
+READY FOR:
+  → UI integration (connect to player_damaged signal)
+  → Testing damage mechanics
+  → Balancing damage values
+  → Visual feedback (already has shake)
+
+================================================================================
+                         DEBUG CONSOLE OUTPUT
+================================================================================
+
+When shield absorbs:
+  "Shield absorbed 30.0 damage from wall"
+
+When hull takes damage:
+  "Hull took 20.0 damage from wall"
+
+When enemy hits:
+  "Player hit by enemy!"
+
+When player dies:
+  (No specific message, but player_died signal emitted)
+
+================================================================================
+                       FILES CREATED/MODIFIED
+================================================================================
+
+MODIFIED:
+  res://player/player.gd          (207 lines, damage system added)
+  res://player/player.tscn        (updated with DamageZone)
+
+CREATED:
+  res://DAMAGE_SYSTEM_IMPLEMENTATION.md    (full documentation)
+  res://validate_damage_system.gd           (test/validation script)
+  res://DAMAGE_SYSTEM_QUICK_REFERENCE.txt   (this file)
+
+================================================================================

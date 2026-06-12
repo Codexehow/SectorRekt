@@ -2,14 +2,14 @@ extends CanvasLayer
 class_name CPUHUD
 
 # References to UI elements
-@onready var cpu_label: Label = $MarginContainer/VBoxContainer/CPULabel
-@onready var cpu_bar: ProgressBar = $MarginContainer/VBoxContainer/CPUBar
-@onready var weapon_label: Label = $MarginContainer/VBoxContainer/WeaponLabel
-@onready var weapon_bar: ProgressBar = $MarginContainer/VBoxContainer/WeaponBar
-@onready var shield_label: Label = $MarginContainer/VBoxContainer/ShieldLabel
-@onready var shield_bar: ProgressBar = $MarginContainer/VBoxContainer/ShieldBar
-@onready var blink_label: Label = $MarginContainer/VBoxContainer/BlinkLabel
-@onready var blink_bar: ProgressBar = $MarginContainer/VBoxContainer/BlinkBar
+@onready var cpu_label: Label = $ResourcePanel/VBoxContainer/CPUSection/CPULabel
+@onready var cpu_bar: ProgressBar = $ResourcePanel/VBoxContainer/CPUSection/CPUBar
+@onready var weapon_label: Label = $ResourcePanel/VBoxContainer/OtherResourcesContainer/WeaponSection/WeaponLabel
+@onready var weapon_bar: ProgressBar = $ResourcePanel/VBoxContainer/OtherResourcesContainer/WeaponSection/WeaponBar
+@onready var shield_label: Label = $ResourcePanel/VBoxContainer/OtherResourcesContainer/ShieldSection/ShieldLabel
+@onready var shield_bar: ProgressBar = $ResourcePanel/VBoxContainer/OtherResourcesContainer/ShieldSection/ShieldBar
+@onready var blink_label: Label = $ResourcePanel/VBoxContainer/OtherResourcesContainer/BlinkSection/BlinkLabel
+@onready var blink_bar: ProgressBar = $ResourcePanel/VBoxContainer/OtherResourcesContainer/BlinkSection/BlinkBar
 
 func _ready() -> void:
 	# Find the player in the scene

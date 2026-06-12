@@ -28,16 +28,49 @@ var weapon_charge: float = 0.0
 var shield_charge: float = 0.0
 var blink_charge: float = 0.0
 
+# === HEALTH & SHIELDS ===
+@export var max_hull: float = 100.0
+@export var max_shield: float = 100.0
+
+var current_hull: float = 100.0
+var current_shield: float = 100.0
+
 @export var is_corrupted: bool = false
 
 signal hallucination_triggered(type: String)
 signal cpu_updated(current: float, weapon: float, shield: float, blink: float)
+signal player_damaged(hull: float, shield: float)
 signal player_died
 signal player_won
 
 func _ready() -> void:
 	add_to_group("player")
+	current_hull = max_hull
+	current_shield = max_shield
 	print("SectorRekt Player - Tank + CPU Cycles System Active")
+	print("Shields + Hull System Initialized")
+
+# === DAMAGE SYSTEM ===
+func take_damage(amount: float, source: String = "unknown") -> void:
+	"""
+	Apply damage to the player.
+	Shields absorb damage first, then hull.
+	Emits player_damaged signal when damage is taken.
+	"""
+	if current_shield > 0:
+		var shield_damage: float = min(amount, current_shield)
+		current_shield -= shield_damage
+		amount -= shield_damage
+		print("Shield absorbed ", shield_damage, " damage from ", source)
+	
+	if amount > 0 and current_hull > 0:
+		current_hull -= amount
+		print("Hull took ", amount, " damage from ", source)
+	
+	player_damaged.emit(current_hull, current_shield)
+	
+	if current_hull <= 0:
+		die()
 
 func _process(delta: float) -> void:
 	# Camera shake logic
@@ -84,6 +117,15 @@ func _physics_process(delta: float) -> void:
 	velocity = direction * current_speed * (1.0 + MOVEMENT_ALLOC * (current_cpu / max_cpu_cycles))
 	
 	move_and_slide()
+	
+	# === WALL DAMAGE (sliding against walls) ===
+	if get_slide_collision_count() > 0:
+		for i in range(get_slide_collision_count()):
+			var collision: KinematicCollision2D = get_slide_collision(i)
+			var collider: Node = collision.get_collider()
+			# Check if colliding with tilemap or static walls
+			if collider is TileMapLayer or (collider is StaticBody2D):
+				take_damage(0.5 * delta, "wall")
 	
 	# Weapon aiming (Pivot only)
 	$WeaponPivot.look_at(get_global_mouse_position())
@@ -148,6 +190,13 @@ func trigger_hallucination(type: String = "glitch") -> void:
 
 func apply_shake(intensity: float) -> void:
 	shake_intensity = max(shake_intensity, intensity)
+
+func _on_body_entered(body: Node2D) -> void:
+	"""Handle collision damage from enemies."""
+	if body.is_in_group("enemies"):
+		take_damage(25.0, "enemy")
+		apply_shake(5.0)  # Visual feedback
+		print("Player hit by enemy!")
 
 func die() -> void:
 	player_died.emit()

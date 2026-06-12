@@ -1,78 +1,196 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://djuscyf502yor"]
 
-[ext_resource type="Script" path="res://ui/cpu_hud.gd" id="1_j1n2k"]
+[ext_resource type="Script" uid="uid://bmgm3nfo2angu" path="res://ui/cpu_hud.gd" id="1_j1n2k"]
 
-[node name="CPUHUD" type="CanvasLayer"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.05, 0.05, 0.08, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 0, 0.6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
+bg_color = Color(0, 1, 0, 0.05)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
+bg_color = Color(0.05, 0.05, 0.08, 0.75)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 1, 0, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+bg_color = Color(0, 1, 0, 0.03)
+
+[node name="CPUHUD" type="CanvasLayer" unique_id=457882972]
 layer = 100
 script = ExtResource("1_j1n2k")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-anchor_left = 0.0
-anchor_top = 0.0
+[node name="ResourcePanel" type="Control" parent="." unique_id=1564041128]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 300.0
+offset_bottom = 250.0
+
+[node name="PanelBackground" type="Panel" parent="ResourcePanel" unique_id=669501565]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="PanelBackground2" type="Panel" parent="ResourcePanel" unique_id=394385791]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ResourcePanel" unique_id=1861378679]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.04
+anchor_right = 0.96
+anchor_bottom = 0.96
+theme_override_constants/separation = 8
+
+[node name="CPUSection" type="VBoxContainer" parent="ResourcePanel/VBoxContainer" unique_id=1944931380]
 layout_mode = 2
-size_flags_horizontal = 0
 size_flags_vertical = 0
-theme_override_constants/separation = 12
+theme_override_constants/separation = 3
 
-[node name="CPULabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="CPULabel" type="Label" parent="ResourcePanel/VBoxContainer/CPUSection" unique_id=293057738]
 layout_mode = 2
-text = "CPU: 0/100"
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_font_sizes/font_size = 16
+text = "CPU"
+text_overrun_behavior = 3
 
-[node name="CPUBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
+[node name="CPUBar" type="ProgressBar" parent="ResourcePanel/VBoxContainer/CPUSection" unique_id=255068686]
+custom_minimum_size = Vector2(260, 24)
 layout_mode = 2
-custom_minimum_size = Vector2(300, 20)
-max_value = 100.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
 step = 0.1
-theme_override_colors/fill = Color(0, 1, 0, 1)
 
-[node name="WeaponLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="CPUValue" type="Label" parent="ResourcePanel/VBoxContainer/CPUSection" unique_id=550055004]
 layout_mode = 2
-text = "Weapon: 0/100"
-theme_override_font_sizes/font_size = 18
-
-[node name="WeaponBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(300, 16)
-max_value = 100.0
-step = 0.1
-theme_override_colors/fill = Color(1, 0.65, 0, 1)
-
-[node name="ShieldLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Shield: 0/100"
-theme_override_font_sizes/font_size = 18
-
-[node name="ShieldBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(300, 16)
-max_value = 100.0
-step = 0.1
-theme_override_colors/fill = Color(0, 0.7, 1, 1)
-
-[node name="BlinkLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Blink: 0/100"
-theme_override_font_sizes/font_size = 18
-
-[node name="BlinkBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(300, 16)
-max_value = 100.0
-step = 0.1
-theme_override_colors/fill = Color(1, 0, 1, 1)
-
-[node name="InstructionsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "Q/RMB: Generate CPU | LMB: Fire Weapon | B: Blink | A/D: Turn | W/S: Speed | G: Toggle Corruption"
+theme_override_colors/font_color = Color(0.7, 1, 0.7, 1)
 theme_override_font_sizes/font_size = 12
-custom_minimum_size = Vector2(300, 0)
+text = "0/100"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="ResourcePanel/VBoxContainer" unique_id=433457454]
+layout_mode = 2
+
+[node name="OtherResourcesContainer" type="GridContainer" parent="ResourcePanel/VBoxContainer" unique_id=1093715789]
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 6
+columns = 2
+
+[node name="WeaponSection" type="VBoxContainer" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer" unique_id=80147842]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="WeaponLabel" type="Label" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/WeaponSection" unique_id=720298971]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "Weapon"
+
+[node name="WeaponBar" type="ProgressBar" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/WeaponSection" unique_id=143660830]
+custom_minimum_size = Vector2(120, 12)
+layout_mode = 2
+step = 0.1
+
+[node name="ShieldSection" type="VBoxContainer" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer" unique_id=1094930386]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="ShieldLabel" type="Label" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/ShieldSection" unique_id=865151052]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.7, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Shield"
+
+[node name="ShieldBar" type="ProgressBar" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/ShieldSection" unique_id=1566568939]
+custom_minimum_size = Vector2(120, 12)
+layout_mode = 2
+step = 0.1
+
+[node name="BlinkSection" type="VBoxContainer" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer" unique_id=1561429494]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="BlinkLabel" type="Label" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/BlinkSection" unique_id=1787025990]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Blink"
+
+[node name="BlinkBar" type="ProgressBar" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/BlinkSection" unique_id=27220340]
+custom_minimum_size = Vector2(120, 12)
+layout_mode = 2
+step = 0.1
+
+[node name="ControlsPanel" type="Control" parent="." unique_id=1890016131]
+layout_mode = 3
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -120.0
+offset_right = 300.0
+grow_vertical = 0
+
+[node name="ControlsPanelBackground" type="Panel" parent="ControlsPanel" unique_id=183518130]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3")
+
+[node name="ControlsPanelBackground2" type="Panel" parent="ControlsPanel" unique_id=1564203121]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ControlsPanel" unique_id=197012765]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.04
+anchor_right = 0.96
+anchor_bottom = 0.96
+theme_override_constants/separation = 2
+
+[node name="ControlsTitle" type="Label" parent="ControlsPanel/VBoxContainer" unique_id=210651856]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_font_sizes/font_size = 11
+text = "[CONTROLS] (Press C to toggle)"
+
+[node name="Separator" type="HSeparator" parent="ControlsPanel/VBoxContainer" unique_id=564459975]
+layout_mode = 2
+
+[node name="InstructionsLabel" type="Label" parent="ControlsPanel/VBoxContainer" unique_id=949381009]
+custom_minimum_size = Vector2(290, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Q/RMB: CPU | LMB: Fire | B: Blink | A/D: Turn | W/S: Speed | G: Corruption"
 autowrap_mode = 2

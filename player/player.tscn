@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://br8i0s57b0ygt"]
 
-[ext_resource type="Script" uid="uid://dir1yau3asyst" path="res://player/player.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://d1juvpvqgq7nh" path="res://player/player.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dqip707sr632k" path="res://assets/generated/tank_player_frame_0.png" id="2_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://dwcxeb3es7fl0" path="res://assets/generated/light_mask.png" id="2_light"]
 
@@ -17,6 +17,9 @@ animations = [{
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_head"]
 radius = 24.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_damage"]
+radius = 30.0
 
 [node name="Player" type="CharacterBody2D" unique_id=1068666403]
 script = ExtResource("1_script")
@@ -47,3 +50,10 @@ texture = ExtResource("2_g1dw6")
 
 [node name="Muzzle" type="Marker2D" parent="WeaponPivot" unique_id=2094937981]
 position = Vector2(32, 0)
+
+[node name="DamageZone" type="Area2D" parent="." unique_id=1548377214]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone" unique_id=-1273110905]
+shape = SubResource("CircleShape2D_damage")
+
+[connection signal="body_entered" from="DamageZone" to="." method="_on_body_entered"]
