@@ -1,29 +1,43 @@
 extends CharacterBody2D
 class_name Player
 
-# ==================== SECTORREKT PLAYER - TANK CONTROLS ====================
-# Always moving forward. A/D = slow turn. W/S = speed control. 1-5 = presets.
-# Mouse aims primary attack.
+# ==================== SECTORREKT PLAYER - TANK + CPU CYCLES ====================
 
-@export var base_speed: float = 90.0      # Reduced for clunkier feel
-@export var turn_speed: float = 1.2       # Slower turning (more tank-like)
-@export var acceleration: float = 120.0   # Slower speed changes
-@export var friction: float = 120.0
+# === TANK MOVEMENT ===
+@export var base_speed: float = 90.0
+@export var turn_speed: float = 1.2
+@export var acceleration: float = 120.0
 
-var current_speed: float = 60.0           # Starts quite slow and heavy
+var current_speed: float = 60.0
 var target_speed: float = 60.0
 var shake_intensity: float = 0.0
 
-@export var is_corrupted: bool = false    # Toggle with G key
+# === CPU CYCLES SYSTEM ===
+@export var max_cpu_cycles: float = 100.0
+var current_cpu: float = 0.0
+var cpu_generation_rate: float = 25.0   # per click
 
-# Signals
+# Allocation percentages
+const WEAPON_ALLOC: float = 0.50
+const SHIELD_ALLOC: float = 0.30
+const MOVEMENT_ALLOC: float = 0.10
+const LIFE_SUPPORT_ALLOC: float = 0.10
+const BLINK_ALLOC: float = 0.10
+
+var weapon_charge: float = 0.0
+var shield_charge: float = 0.0
+var blink_charge: float = 0.0
+
+@export var is_corrupted: bool = false
+
 signal hallucination_triggered(type: String)
+signal cpu_updated(current: float, weapon: float, shield: float, blink: float)
 signal player_died
 signal player_won
 
 func _ready() -> void:
 	add_to_group("player")
-	print("SectorRekt Player - Tank Controls Initialized (Clunky Baseline)")
+	print("SectorRekt Player - Tank + CPU Cycles System Active")
 
 func _process(delta: float) -> void:
 	# Camera shake logic
@@ -34,52 +48,79 @@ func _process(delta: float) -> void:
 		$Camera2D.offset = Vector2.ZERO
 
 func _physics_process(delta: float) -> void:
-	# === INPUT ===
-	var turn_input: float = 0.0
+	# === CPU CYCLE DECAY ===
+	# CPU decays naturally over time when not being generated
+	current_cpu = max(current_cpu - 15.0 * delta, 0.0)
 	
-	# Using keys directly since actions might not be defined in Input Map
+	# Distribute CPU
+	if current_cpu > 0:
+		weapon_charge = min(weapon_charge + current_cpu * WEAPON_ALLOC * delta * 2.5, 100.0)
+		shield_charge = min(shield_charge + current_cpu * SHIELD_ALLOC * delta * 2.5, 100.0)
+		blink_charge = min(blink_charge + current_cpu * BLINK_ALLOC * delta * 2.5, 100.0)
+	
+	# === TANK MOVEMENT ===
+	var turn_input: float = 0.0
 	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		turn_input += 1.0
 	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 		turn_input -= 1.0
 	
-	# W/S speed control
 	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 		target_speed = min(target_speed + acceleration * delta, base_speed * 2.0)
 	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
 		target_speed = max(target_speed - acceleration * delta, 30.0)
 	
-	# Number keys for speed presets (1 slowest → 5 fastest)
+	# Speed presets
 	if Input.is_key_pressed(KEY_1): target_speed = base_speed * 0.5
 	if Input.is_key_pressed(KEY_2): target_speed = base_speed * 0.75
 	if Input.is_key_pressed(KEY_3): target_speed = base_speed * 1.0
 	if Input.is_key_pressed(KEY_4): target_speed = base_speed * 1.35
 	if Input.is_key_pressed(KEY_5): target_speed = base_speed * 1.8
 	
-	# Smooth speed lerp (keeps it feeling mechanical)
 	current_speed = lerp(current_speed, target_speed, 6.0 * delta)
 	
-	# === TURNING ===
 	rotation += turn_input * turn_speed * delta
-	
-	# === MOVEMENT - Always moving forward ===
 	var direction: Vector2 = Vector2.RIGHT.rotated(rotation)
-	velocity = direction * current_speed
+	velocity = direction * current_speed * (1.0 + MOVEMENT_ALLOC * (current_cpu / max_cpu_cycles))
 	
 	move_and_slide()
 	
-	# === ATTACK AIMING (Mouse) ===
+	# Weapon aiming (Pivot only)
 	$WeaponPivot.look_at(get_global_mouse_position())
 
+	cpu_updated.emit(current_cpu, weapon_charge, shield_charge, blink_charge)
+
 func _input(event: InputEvent) -> void:
-	# Primary Attack (Thunderbolt) - Mouse click
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		fire_thunderbolt()
+	# CPU Generation on click (Q or Right Click)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		generate_cpu_cycles()
+	if event is InputEventKey and event.pressed and event.keycode == KEY_Q:
+		generate_cpu_cycles()
 	
-	# Debug toggle corrupted mode
+	# Primary Attack (Fire Thunderbolt)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if weapon_charge >= 30.0:
+			fire_thunderbolt()
+			weapon_charge -= 30.0
+		else:
+			print("Weapon not charged! (", int(weapon_charge), "%)")
+
+	# Blink Drive
+	if event is InputEventKey and event.pressed and event.keycode == KEY_B:
+		if blink_charge >= 100.0:
+			blink_drive()
+		else:
+			print("Blink Drive not charged!")
+
+	# Debug toggle
 	if event is InputEventKey and event.pressed and event.keycode == KEY_G:
 		is_corrupted = not is_corrupted
 		print("Player corrupted mode: ", is_corrupted)
+
+func generate_cpu_cycles() -> void:
+	# Generate CPU on click (Q or Right Mouse Button)
+	current_cpu = min(current_cpu + cpu_generation_rate, max_cpu_cycles)
+	print("CPU Generated! Current: ", int(current_cpu), " / ", int(max_cpu_cycles))
 
 func fire_thunderbolt() -> void:
 	var thunderbolt_scene: PackedScene = preload("res://projectile.tscn")
@@ -89,19 +130,24 @@ func fire_thunderbolt() -> void:
 	tb.global_position = muzzle.global_position
 	
 	var mouse_pos: Vector2 = get_global_mouse_position()
-	# Set the direction - ensure projectile.gd has a 'direction' property
 	if "direction" in tb:
 		tb.direction = (mouse_pos - muzzle.global_position).normalized()
 	
 	get_parent().add_child(tb)
-	print("Thunderbolt fired toward mouse!")
+	print("THUNDERBOLT FIRED!")
+
+func blink_drive() -> void:
+	print("BLINK DRIVE ACTIVATED - Teleport forward!")
+	var blink_distance: float = 150.0
+	var direction: Vector2 = Vector2.RIGHT.rotated(rotation)
+	global_position += direction * blink_distance
+	blink_charge = 0.0
+
+func trigger_hallucination(type: String = "glitch") -> void:
+	hallucination_triggered.emit(type)
 
 func apply_shake(intensity: float) -> void:
 	shake_intensity = max(shake_intensity, intensity)
-
-# Hallucination trigger
-func trigger_hallucination(type: String = "glitch") -> void:
-	hallucination_triggered.emit(type)
 
 func die() -> void:
 	player_died.emit()

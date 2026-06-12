@@ -1,0 +1,229 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    SECTORREKT - QUICK START GUIDE                              ║
+║                   CPU Cycles System - Click-Based Edition                       ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════════
+1. CONTROLS
+═══════════════════════════════════════════════════════════════════════════════════
+
+GENERATE RESOURCES:
+  Q Key              → Generate 25 CPU cycles
+  Right Mouse Button → Generate 25 CPU cycles
+  
+ATTACK:
+  Left Mouse Button  → Fire Thunderbolt (requires 30+ weapon charge)
+  
+MOVEMENT:
+  W / Up Arrow       → Accelerate forward
+  S / Down Arrow     → Decelerate
+  A / Left Arrow     → Turn left
+  D / Right Arrow    → Turn right
+  Mouse Position     → Aim weapon
+  1-5 Keys           → Set speed presets
+  
+SPECIAL:
+  B Key              → Blink Drive (requires 100 blink charge)
+  G Key              → Toggle Corruption Mode
+  
+═══════════════════════════════════════════════════════════════════════════════════
+2. RESOURCE SYSTEM
+═══════════════════════════════════════════════════════════════════════════════════
+
+WHAT IS CPU?
+  → Your primary resource pool
+  → Max capacity: 100 cycles
+  → Automatically distributes to 5 systems
+  
+HOW TO GENERATE CPU:
+  → Click Q or Right Mouse Button
+  → Each click gives +25 CPU
+  → Stacks up to 100 max
+  → Decay: -15 cycles/second when idle
+  
+DISTRIBUTION (Automatic):
+  ┌─────────────────────────────────┐
+  │ CPU Generation → Distribution   │
+  ├─────────────────────────────────┤
+  │ 50% → Weapon Charge (orange)    │
+  │ 30% → Shield Charge (blue)      │
+  │ 10% → Movement Bonus            │
+  │ 10% → Life Support              │
+  │ 10% → Blink Charge (magenta)    │
+  └─────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+3. ABILITIES
+═══════════════════════════════════════════════════════════════════════════════════
+
+THUNDERBOLT (Weapon)
+  Requirement: 30+ weapon charge
+  Cost:        30 cycles
+  Action:      Left Mouse Button
+  Effect:      Fires projectile toward cursor
+  Status:      ✓ READY
+
+BLINK DRIVE (Teleport)
+  Requirement: 100 blink charge (fully charged)
+  Cost:        100 cycles
+  Action:      Press B Key
+  Effect:      Teleport 150px forward (through walls)
+  Status:      ✓ READY
+
+SHIELD
+  Requirement: Automatic when CPU is generated
+  Cost:        -
+  Action:      None (automatic)
+  Effect:      30% of CPU allocation
+  Status:      ✓ Charging
+
+═══════════════════════════════════════════════════════════════════════════════════
+4. RESOURCE BARS (On Screen)
+═══════════════════════════════════════════════════════════════════════════════════
+
+You'll see 4 bars in the top-left corner:
+
+  CPU: X/100     [████░░░░░] GREEN
+  → Your total resource pool. Decays over time.
+  
+  Weapon: X/100  [██░░░░░░░] ORANGE
+  → Required to fire (needs ≥30). Click to fire when ready.
+  
+  Shield: X/100  [░░░░░░░░░░] BLUE
+  → Increases with CPU generation. Defensive capability.
+  
+  Blink: X/100   [░░░░░░░░░░] MAGENTA
+  → Press B to teleport when fully charged (=100).
+
+═══════════════════════════════════════════════════════════════════════════════════
+5. EXAMPLE GAMEPLAY
+═══════════════════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: Rapid Fire Attack
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Click Q twice (CPU = 50)                                     │
+│ 2. Weapon charge builds up (25+ from first click distribution)   │
+│ 3. Left-click to fire weapon                                    │
+│ 4. Cost: -30 weapon charge                                      │
+│ 5. Weapon charge = 20-ish, need to generate more CPU            │
+└─────────────────────────────────────────────────────────────────┘
+
+SCENARIO 2: Blink Escape
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Click Q four times (CPU = 100)                               │
+│ 2. Blink charge builds up (4 × 10% allocation = 40+ per click)   │
+│ 3. After a few seconds, blink reaches 100                       │
+│ 4. Press B to teleport forward 150px                            │
+│ 5. Escape achieved! Blink resets to 0                           │
+└─────────────────────────────────────────────────────────────────┘
+
+SCENARIO 3: Sustained Fire
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Click Q once (CPU = 25)                                      │
+│ 2. Wait for weapon to charge (50% allocation)                   │
+│ 3. Fire when ready                                              │
+│ 4. Immediately click Q again while weapon recovers              │
+│ 5. Keep cycling: Generate → Fire → Generate → Fire             │
+└─────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+6. KEY MECHANICS
+═══════════════════════════════════════════════════════════════════════════════════
+
+CLICK-BASED GENERATION
+  → NOT a holding system - it's click & release
+  → Each click is instant +25 CPU
+  → More tactical than holding down a button
+  → Frees up your button from holding while dodging
+  
+CPU DECAY
+  → When you stop generating CPU, it slowly drains
+  → Rate: -15 cycles/second
+  → Full 100 CPU takes ~6.7 seconds to drain completely
+  → Encourages active resource management
+  
+AUTOMATIC DISTRIBUTION
+  → No manual allocation needed
+  → All systems feed simultaneously
+  → Weapon gets the most (50%)
+  → Everything scales together
+  
+MOVEMENT BONUS
+  → 10% of CPU generation increases speed
+  → More CPU = slightly faster movement
+  → Never stops you from moving
+  
+═══════════════════════════════════════════════════════════════════════════════════
+7. TIPS & TRICKS
+═══════════════════════════════════════════════════════════════════════════════════
+
+✓ Click Q in rhythm with your firing pattern
+✓ Don't let CPU decay to 0 - keep generating
+✓ Watch your weapon bar - when it's white, you can fire
+✓ Blink when surrounded - it goes through walls!
+✓ Use speed presets (1-5) to find your preferred speed
+✓ A and D to turn - you can aim in any direction
+✓ G key toggles corruption - try it in corrupted mode!
+✓ The more you understand the timings, the better you play
+
+═══════════════════════════════════════════════════════════════════════════════════
+8. CORRUPTION MODE (G Key)
+═══════════════════════════════════════════════════════════════════════════════════
+
+Press G to toggle corruption mode:
+  → Visual distortions may occur
+  → Game mechanics remain the same
+  → Challenge yourself in corrupted mode
+  → Can activate hallucination effects
+
+═══════════════════════════════════════════════════════════════════════════════════
+9. TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════════
+
+"My weapon won't fire!"
+  → Check weapon bar - need at least 30 charge
+  → Make sure you're clicking Q first to generate CPU
+  → Wait for weapon bar to fill up (orange color)
+  
+"CPU decays too fast!"
+  → That's intentional - forces you to play actively
+  → Click Q more frequently to maintain high CPU
+  → Plan your attacks with the decay in mind
+  
+"Blink didn't work!"
+  → Blink bar must be FULL (100, not 99)
+  → Takes several clicks to charge fully
+  → Press B key when bar is completely filled
+  
+"Where are the UI bars?"
+  → Check top-left corner of screen
+  → Should show 4 bars: CPU, Weapon, Shield, Blink
+  → If missing, restart the scene
+
+═══════════════════════════════════════════════════════════════════════════════════
+10. SUMMARY
+═══════════════════════════════════════════════════════════════════════════════════
+
+CPU Cycles System gives you:
+  ✓ Active resource management (click to generate)
+  ✓ Multiple strategic decisions per second
+  ✓ Clear visual feedback (4 progress bars)
+  ✓ Interconnected systems (all fed by single resource)
+  ✓ Tactical depth (when to generate vs when to spend)
+
+You control:
+  ✓ CPU generation timing
+  ✓ Weapon firing timing
+  ✓ Movement direction and speed
+  ✓ When to blink
+  ✓ All via simple keyboard/mouse controls
+
+Master these systems to become unstoppable! 🎮
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+Created for: SectorRekt
+System: CPU Cycles (Click-Based Edition)
+Status: ✓ READY TO PLAY
+
+═══════════════════════════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://br8i0s57b0ygt"]
 
-[ext_resource type="Script" uid="uid://cguqhspkiusg5" path="res://player/player.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://dir1yau3asyst" path="res://player/player.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dqip707sr632k" path="res://assets/generated/tank_player_frame_0.png" id="2_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://dwcxeb3es7fl0" path="res://assets/generated/light_mask.png" id="2_light"]
 

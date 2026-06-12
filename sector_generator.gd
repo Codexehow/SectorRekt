@@ -53,7 +53,7 @@ func generate_level() -> void:
 				tilemap_layer.set_cell(Vector2i(x, y), SOURCE_BACKGROUND, TILE_COORD)
 	
 	var attempts: int = 0
-	var target_rooms: int = randi_range(room_count / 2, room_count)
+	var target_rooms: int = randi_range(int(room_count / 2), int(room_count))
 	
 	# 1. Generate Rooms
 	while rooms.size() < target_rooms and attempts < 200:

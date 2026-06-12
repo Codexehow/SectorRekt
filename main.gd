@@ -5,7 +5,9 @@ extends Node2D
 
 var enemy_scene: PackedScene = preload("res://basic_virus.tscn")
 var ui_scene: PackedScene = preload("res://ui/hallucination_ui.tscn")
+var cpu_hud_scene: PackedScene = preload("res://ui/cpu_hud.tscn")
 var h_ui: CanvasLayer
+var cpu_hud: CanvasLayer
 var status_ui: CanvasLayer
 
 func _ready() -> void:
@@ -22,7 +24,12 @@ func _ready() -> void:
 	status_ui = CanvasLayer.new()
 	add_child(status_ui)
 	
-	# Instance UI
+	# Instance CPU HUD
+	if cpu_hud_scene:
+		cpu_hud = cpu_hud_scene.instantiate() as CanvasLayer
+		add_child(cpu_hud)
+	
+	# Instance hallucination UI
 	if ui_scene:
 		h_ui = ui_scene.instantiate() as CanvasLayer
 		add_child(h_ui)

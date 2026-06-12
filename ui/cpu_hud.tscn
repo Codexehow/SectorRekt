@@ -1,0 +1,78 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://ui/cpu_hud.gd" id="1_j1n2k"]
+
+[node name="CPUHUD" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_j1n2k")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/separation = 12
+
+[node name="CPULabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "CPU: 0/100"
+theme_override_font_sizes/font_size = 24
+
+[node name="CPUBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 20)
+max_value = 100.0
+step = 0.1
+theme_override_colors/fill = Color(0, 1, 0, 1)
+
+[node name="WeaponLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Weapon: 0/100"
+theme_override_font_sizes/font_size = 18
+
+[node name="WeaponBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 16)
+max_value = 100.0
+step = 0.1
+theme_override_colors/fill = Color(1, 0.65, 0, 1)
+
+[node name="ShieldLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Shield: 0/100"
+theme_override_font_sizes/font_size = 18
+
+[node name="ShieldBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 16)
+max_value = 100.0
+step = 0.1
+theme_override_colors/fill = Color(0, 0.7, 1, 1)
+
+[node name="BlinkLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Blink: 0/100"
+theme_override_font_sizes/font_size = 18
+
+[node name="BlinkBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 16)
+max_value = 100.0
+step = 0.1
+theme_override_colors/fill = Color(1, 0, 1, 1)
+
+[node name="InstructionsLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Q/RMB: Generate CPU | LMB: Fire Weapon | B: Blink | A/D: Turn | W/S: Speed | G: Toggle Corruption"
+theme_override_font_sizes/font_size = 12
+custom_minimum_size = Vector2(300, 0)
+autowrap_mode = 2
