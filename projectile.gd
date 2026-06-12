@@ -1,14 +1,20 @@
 extends Area2D
 
-@export var speed: float = 600.0
-@export var damage: float = 25.0
-@export var lifetime: float = 2.0
+@export var speed: float = 800.0
+@export var damage: float = 50.0
+@export var lifetime: float = 0.5
 
 var direction: Vector2 = Vector2.RIGHT
 
 func _ready() -> void:
 	# Set rotation based on direction
 	rotation = direction.angle()
+	
+	# Scale up to look like a shockwave
+	scale = Vector2(0.5, 0.5)
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(2.5, 2.5), lifetime)
+	tween.parallel().tween_property(self, "modulate:a", 0.0, lifetime)
 	
 	# Self-destruct after lifetime
 	get_tree().create_timer(lifetime).timeout.connect(queue_free)

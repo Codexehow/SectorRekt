@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cu5gok2gg7pte"
-path="res://.godot/imported/metallic_segment.png-81646ac55e90781e0727115e42c6646c.ctex"
+uid="uid://dqip707sr632k"
+path="res://.godot/imported/tank_player_frame_0.png-9338c6eac3ba3809d1ec45ad8db55291.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/player/baseline/metallic_segment.png"
-dest_files=["res://.godot/imported/metallic_segment.png-81646ac55e90781e0727115e42c6646c.ctex"]
+source_file="res://assets/generated/tank_player_frame_0.png"
+dest_files=["res://.godot/imported/tank_player_frame_0.png-9338c6eac3ba3809d1ec45ad8db55291.ctex"]
 
 [params]
 

@@ -5,7 +5,13 @@ var player: Node2D = null
 
 func _ready() -> void:
 	add_to_group("enemies")
+	add_to_group("enemy")
 	player = get_tree().get_first_node_in_group("player") as Node2D
+
+func take_damage(amount: float) -> void:
+	# Add HP logic here if needed
+	print("Enemy took damage: ", amount)
+	queue_free() # For now, one hit kill
 
 func _physics_process(_delta: float) -> void:
 	if player:
