@@ -31,15 +31,26 @@ var blink_charge: float = 0.0
 # === HEALTH & SHIELDS ===
 @export var max_hull: float = 100.0
 @export var max_shield: float = 100.0
+@export var shield_regen_delay: float = 10.0  # Seconds before shield starts regenerating
+@export var shield_regen_rate: float = 1.0  # Points per second
 
 var current_hull: float = 100.0
 var current_shield: float = 100.0
+var shield_damage_timer: float = 0.0  # Timer for shield regen delay
+
+# === SHIELD BUFFER SYSTEM ===
+# When shields are full, incoming CPU allocation goes to a buffer
+# When shields drop below 10%, the buffer slowly recharges shields
+var shield_buffer: float = 0.0
+var shield_buffer_recharge_rate: float = 1.0  # Points per second when shields are low
+var shield_low_threshold: float = 10.0  # Shield percentage threshold for buffer recharge
 
 @export var is_corrupted: bool = false
 
 signal hallucination_triggered(type: String)
 signal cpu_updated(current: float, weapon: float, shield: float, blink: float)
 signal player_damaged(hull: float, shield: float)
+signal shield_buffer_updated(buffer: float)
 signal player_died
 signal player_won
 
@@ -56,21 +67,33 @@ func take_damage(amount: float, source: String = "unknown") -> void:
 	Apply damage to the player.
 	Shields absorb damage first, then hull.
 	Emits player_damaged signal when damage is taken.
+	Resets shield regen timer when damage is taken.
 	"""
 	if current_shield > 0:
 		var shield_damage: float = min(amount, current_shield)
 		current_shield -= shield_damage
 		amount -= shield_damage
 		print("Shield absorbed ", shield_damage, " damage from ", source)
+		show_impact_glimmer()  # Show glimmer ONLY when shields are active
+		shield_damage_timer = 0.0  # Reset shield regen timer on shield damage
 	
 	if amount > 0 and current_hull > 0:
 		current_hull -= amount
 		print("Hull took ", amount, " damage from ", source)
+		shield_damage_timer = 0.0  # Reset shield regen timer on hull damage too
 	
 	player_damaged.emit(current_hull, current_shield)
 	
 	if current_hull <= 0:
 		die()
+
+func show_impact_glimmer() -> void:
+	"""
+	Trigger a sci-fi shield impact effect (cyan/blue glitchy flash).
+	Only called when shields actively absorb damage.
+	"""
+	if has_node("ImpactGlimmer"):
+		$ImpactGlimmer.trigger_glimmer()
 
 func _process(delta: float) -> void:
 	# Camera shake logic
@@ -85,10 +108,40 @@ func _physics_process(delta: float) -> void:
 	# CPU decays naturally over time when not being generated
 	current_cpu = max(current_cpu - 15.0 * delta, 0.0)
 	
-	# Distribute CPU
+	# === SYSTEM DRAIN WHEN CPU IS ZERO ===
+	# When CPU reaches 0, all systems begin losing power rapidly
+	if current_cpu <= 0:
+		weapon_charge = max(weapon_charge - 30.0 * delta, 0.0)
+		shield_charge = max(shield_charge - 30.0 * delta, 0.0)
+		blink_charge = max(blink_charge - 30.0 * delta, 0.0)
+		current_speed = max(current_speed - 50.0 * delta, 30.0)
+	
+	# === SHIELD BUFFER & REGENERATION ===
+	# Shield buffer accumulates when shields are at max
+	# When shields drop below threshold, buffer recharges shields slowly
+	if current_shield >= max_shield:
+		# Shields at max - accumulate CPU allocation into buffer
+		shield_buffer = min(shield_buffer + current_cpu * SHIELD_ALLOC * delta * 2.5, 500.0)  # Large buffer
+		shield_damage_timer = 0.0  # Reset regen timer since shields are full
+	elif current_shield < shield_low_threshold and shield_buffer > 0:
+		# Shields critically low - recharge from buffer
+		var recharge_amount: float = shield_buffer_recharge_rate * delta
+		var shield_healed: float = min(recharge_amount, shield_buffer)
+		shield_buffer -= shield_healed
+		current_shield = min(current_shield + shield_healed, max_shield)
+		player_damaged.emit(current_hull, current_shield)  # Update UI
+	else:
+		# Standard shield regen with delay
+		if current_shield < max_shield:
+			shield_damage_timer += delta
+			if shield_damage_timer >= shield_regen_delay:
+				# Shields are regenerating
+				current_shield = min(current_shield + shield_regen_rate * delta, max_shield)
+				player_damaged.emit(current_hull, current_shield)  # Update UI
+	
+	# Distribute CPU to weapon and blink (shield handled above)
 	if current_cpu > 0:
 		weapon_charge = min(weapon_charge + current_cpu * WEAPON_ALLOC * delta * 2.5, 100.0)
-		shield_charge = min(shield_charge + current_cpu * SHIELD_ALLOC * delta * 2.5, 100.0)
 		blink_charge = min(blink_charge + current_cpu * BLINK_ALLOC * delta * 2.5, 100.0)
 	
 	# === TANK MOVEMENT ===
@@ -131,6 +184,7 @@ func _physics_process(delta: float) -> void:
 	$WeaponPivot.look_at(get_global_mouse_position())
 
 	cpu_updated.emit(current_cpu, weapon_charge, shield_charge, blink_charge)
+	shield_buffer_updated.emit(shield_buffer)
 
 func _input(event: InputEvent) -> void:
 	# CPU Generation on click (Q or Right Click)

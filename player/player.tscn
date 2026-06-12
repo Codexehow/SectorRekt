@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://d1juvpvqgq7nh" path="res://player/player.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dqip707sr632k" path="res://assets/generated/tank_player_frame_0.png" id="2_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://dwcxeb3es7fl0" path="res://assets/generated/light_mask.png" id="2_light"]
+[ext_resource type="Script" uid="uid://cwvkbtcbedlko" path="res://player/impact_glimmer.gd" id="3_glimmer"]
+[ext_resource type="Texture2D" path="res://assets/generated/shield_effect_round_frame_0.png" id="3_shield"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_head"]
 animations = [{
@@ -55,5 +57,13 @@ position = Vector2(32, 0)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone" unique_id=-1273110905]
 shape = SubResource("CircleShape2D_damage")
+
+[node name="ImpactGlimmer" type="Node2D" parent="." unique_id=1750264810]
+script = ExtResource("3_glimmer")
+
+[node name="Sprite2D" type="Sprite2D" parent="ImpactGlimmer" unique_id=1750264811]
+texture = ExtResource("3_shield")
+scale = Vector2(2.1, 2.1)
+modulate = Color(0, 1, 1, 0.9)
 
 [connection signal="body_entered" from="DamageZone" to="." method="_on_body_entered"]

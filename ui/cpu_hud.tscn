@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://djuscyf502yor"]
 
-[ext_resource type="Script" uid="uid://bmgm3nfo2angu" path="res://ui/cpu_hud.gd" id="1_j1n2k"]
+[ext_resource type="Script" uid="uid://dkl2bgqqwquiy" path="res://ui/cpu_hud.gd" id="1_j1n2k"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.05, 0.05, 0.08, 0.8)
@@ -22,6 +22,17 @@ border_width_bottom = 1
 border_color = Color(0, 1, 0, 0.4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+bg_color = Color(0, 1, 0, 0.03)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5"]
+bg_color = Color(0.05, 0.05, 0.08, 0.75)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 1, 0, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6"]
 bg_color = Color(0, 1, 0, 0.03)
 
 [node name="CPUHUD" type="CanvasLayer" unique_id=457882972]
@@ -127,6 +138,28 @@ custom_minimum_size = Vector2(120, 12)
 layout_mode = 2
 step = 0.1
 
+[node name="ShieldBufferLabel" type="Label" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/ShieldSection" unique_id=1566568940]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.5, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "Buffer: 0"
+
+[node name="HullSection" type="VBoxContainer" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer" unique_id=1094930400]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="HullLabel" type="Label" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/HullSection" unique_id=865151070]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+text = "Hull"
+
+[node name="HullBar" type="ProgressBar" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer/HullSection" unique_id=1566568950]
+custom_minimum_size = Vector2(120, 12)
+layout_mode = 2
+step = 0.1
+
 [node name="BlinkSection" type="VBoxContainer" parent="ResourcePanel/VBoxContainer/OtherResourcesContainer" unique_id=1561429494]
 layout_mode = 2
 size_flags_vertical = 0
@@ -194,3 +227,64 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Q/RMB: CPU | LMB: Fire | B: Blink | A/D: Turn | W/S: Speed | G: Corruption"
 autowrap_mode = 2
+
+[node name="OptionsPanel" type="Control" parent="." unique_id=1890016132]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_bottom = 200.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="OptionsPanelBackground" type="Panel" parent="OptionsPanel" unique_id=183518131]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5")
+
+[node name="OptionsPanelBackground2" type="Panel" parent="OptionsPanel" unique_id=1564203122]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_6")
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="OptionsPanel" unique_id=197012766]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.04
+anchor_right = 0.96
+anchor_bottom = 0.96
+theme_override_constants/separation = 4
+
+[node name="OptionsTitle" type="Label" parent="OptionsPanel/VBoxContainer2" unique_id=210651859]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "[OPTIONS]"
+
+[node name="Separator3" type="HSeparator" parent="OptionsPanel/VBoxContainer2" unique_id=564459977]
+layout_mode = 2
+
+[node name="FullscreenCheckButton" type="CheckButton" parent="OptionsPanel/VBoxContainer2" unique_id=210651860]
+layout_mode = 2
+text = "Fullscreen"
+
+[node name="ResolutionLabel" type="Label" parent="OptionsPanel/VBoxContainer2" unique_id=210651861]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_font_sizes/font_size = 10
+text = "Resolution:"
+
+[node name="ResolutionOptionButton" type="OptionButton" parent="OptionsPanel/VBoxContainer2" unique_id=210651862]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+fit_to_longest_item = false

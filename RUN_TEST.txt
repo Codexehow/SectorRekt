@@ -1,0 +1,276 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║               SHIELD + HULL DAMAGE SYSTEM - HOW TO TEST                   ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+QUICK START
+═══════════════════════════════════════════════════════════════════════════
+
+1. Open Godot project
+2. Open scene: res://world.tscn
+3. Click Play (or F5)
+4. Move player toward walls
+5. Watch for cyan glimmer when shields take damage
+6. Check UI top-left for Shield and Hull bars
+
+
+WHAT TO LOOK FOR
+═══════════════════════════════════════════════════════════════════════════
+
+✓ CYAN GLIMMER EFFECT
+  Location: Over the yellow spider tank
+  When: When shields absorb damage
+  Duration: 0.15 seconds
+  Animation: Flickers 8 times while fading
+  Expected: Bright blue/green flash
+
+✓ SHIELD BAR
+  Location: Top-left UI panel
+  Color: Cyan
+  Changes: Decreases when taking damage
+  Max: 100/100
+
+✓ HULL BAR
+  Location: Top-left UI panel (below Shield bar)
+  Color: Red (normal), Bright Red (critical)
+  Changes: Only decreases when shields are depleted
+  Max: 100/100
+
+✓ CONSOLE OUTPUT
+  Open: View → Output Console
+  Look for:
+    - "Shield absorbed X damage from wall"
+    - "Hull took X damage from wall"
+
+
+TESTING SCENARIOS
+═══════════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: Wall Collision with Shields
+─────────────────────────────────────────
+1. Start game
+2. Walk slowly toward a wall
+3. Watch Shield bar decrease
+4. See cyan glimmer appear
+5. Hull bar stays at 100
+
+Expected Result: ✓ PASS
+  • Cyan flash appears
+  • Shield bar decreases
+  • Hull bar unchanged
+  • Console: "Shield absorbed X damage from wall"
+
+
+SCENARIO 2: Shield Depletion
+──────────────────────────────
+1. Continue into wall
+2. Watch shield reach 0
+3. Continue taking damage
+4. Hull bar starts decreasing
+5. NO MORE cyan glimmer
+
+Expected Result: ✓ PASS
+  • Shield bar at 0/100
+  • No cyan flash (shields gone)
+  • Hull bar decreasing
+  • Console: "Hull took X damage from wall"
+
+
+SCENARIO 3: Enemy Contact
+──────────────────────────
+1. Run away from wall
+2. Let shields regenerate (if enabled)
+   OR reset level with reload
+3. Find an enemy in the level
+4. Walk into enemy
+5. Watch for cyan glimmer
+6. Shield bar decreases by 25
+
+Expected Result: ✓ PASS
+  • Cyan flash appears
+  • Shield absorbs 25 damage
+  • Hull unchanged
+  • Console: "Shield absorbed 25 damage from enemy"
+
+
+SCENARIO 4: Critical Hull State
+────────────────────────────────
+1. Let shields break (scenario 2)
+2. Take more wall damage
+3. Damage hull to ≤ 25%
+4. Watch Hull label turn bright red
+5. Continue damaging
+
+Expected Result: ✓ PASS
+  • Hull label color: Normal red → Bright red
+  • Stays bright red while ≤ 25%
+  • Returns to normal red if > 25%
+
+
+SCENARIO 5: Game Over
+──────────────────────
+1. Continue taking damage
+2. Let hull reach 0
+3. Game should end
+
+Expected Result: ✓ PASS
+  • Scene shows "SYSTEM CORRUPTED"
+  • Scene reloads after delay
+  • Game restarts
+
+
+CONTROLS
+═══════════════════════════════════════════════════════════════════════════
+
+Arrow Keys / WASD:   Move tank
+Mouse:               Aim and fire (optional)
+Q or Right Mouse:    Generate CPU (optional)
+
+For testing damage:
+  • Use ARROW KEYS to move toward walls
+  • Let collisions deal damage naturally
+
+
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════
+
+❌ No cyan glimmer showing?
+   → Check if shields > 0
+   → Try walking into wall slower
+   → Check console for damage messages
+
+❌ Hull bar not visible?
+   → Scroll up in UI panel
+   → Check if HullLabel and HullBar in scene
+
+❌ Hull bar not updating?
+   → Deplete shields first
+   → Then damage hull
+   → Check console for "Hull took X damage"
+
+❌ Game crashes?
+   → Check Output console for errors
+   → Check that all files exist:
+     - res://player/impact_glimmer.gd
+     - res://player/player.tscn (with ImpactGlimmer)
+     - res://ui/cpu_hud.gd (updated)
+
+❌ Can't see enemies?
+   → Enemies spawn randomly in rooms
+   → Navigate through level
+   → Or just test with walls
+
+
+PERFORMANCE CHECK
+═══════════════════════════════════════════════════════════════════════════
+
+Monitor FPS:
+  • Should stay stable (60 FPS or better)
+  • Glimmer effect shouldn't cause lag
+  • UI updates smooth and responsive
+
+Check Memory:
+  • No growing memory usage
+  • Effect is temporary (0.15s)
+  • Reuses existing nodes
+
+
+QUICK TEST (30 SECONDS)
+═══════════════════════════════════════════════════════════════════════════
+
+1. Start game
+2. Walk toward wall
+3. Wait 5 seconds - shield decreases, cyan flashes appear
+4. Continue into wall
+5. Watch shield hit 0, hull starts decreasing, NO more flashes
+6. Verify Hull bar in UI turns red
+7. ✓ DONE - All features working!
+
+
+DETAILED TEST (5 MINUTES)
+═════════════════════════════════════════════════════════════════════════
+
+1. Start game (0:00)
+2. Move toward wall, observe shield damage (0:30)
+3. Confirm cyan glimmer appears (1:00)
+4. Continue until shield hits 0 (2:00)
+5. Observe no glimmer on hull damage (2:30)
+6. Move away, find enemy or reload (3:00)
+7. Test enemy damage collision (3:30)
+8. Verify critical state color change (4:00)
+9. Damage hull to 0 for game over (4:30)
+10. Confirm scene reloads (5:00)
+
+
+CONSOLE VALIDATION
+═════════════════════════════════════════════════════════════════════════════
+
+Press: View → Output Console
+
+Expected messages:
+
+At startup:
+  ✓ "SectorRekt Player - Tank + CPU Cycles System Active"
+  ✓ "Shields + Hull System Initialized"
+  ✓ "CPUHUD connected to Player signals"
+
+During gameplay:
+  ✓ "Shield absorbed X damage from wall"
+  ✓ "Hull took X damage from wall"
+  ✓ "Shield absorbed X damage from enemy"
+  ✓ "Hull took X damage from enemy"
+
+No error messages should appear
+
+
+KEY VERIFICATION POINTS
+═════════════════════════════════════════════════════════════════════════════
+
+FEATURE 1: Damage System
+  ✅ Shields take damage first
+  ✅ Hull only affected when shield = 0
+  ✅ Signal emitted with updated values
+  ✅ Console shows damage source
+
+FEATURE 2: Impact Glimmer
+  ✅ Cyan flash appears (RGB 0,1,1)
+  ✅ Only when shields > 0
+  ✅ Never when shields = 0
+  ✅ 0.15 second duration
+  ✅ Smooth flicker animation
+
+FEATURE 3: UI Hull Bar
+  ✅ Bar visible in top-left
+  ✅ Updates in real-time
+  ✅ Red color normally
+  ✅ Bright red when critical
+  ✅ Displays current/max values
+
+
+EXPECTED RESULTS SUMMARY
+═════════════════════════════════════════════════════════════════════════════
+
+✓ Cyan glimmer appears 1+ times when taking damage with shields
+✓ No glimmer appears when shields depleted (hull only)
+✓ Shield bar decreases on damage
+✓ Hull bar only decreases after shields break
+✓ Hull label turns bright red when ≤ 25%
+✓ Game ends when hull reaches 0
+✓ Console shows correct damage messages
+✓ No errors in console
+✓ FPS stays stable
+✓ UI updates smoothly
+
+
+═══════════════════════════════════════════════════════════════════════════
+                        Ready to test! 🎮
+
+Start the game with: res://world.tscn
+
+Then simply play and watch for:
+  1. Cyan flashes (glimmer)
+  2. UI bar updates (shield/hull)
+  3. Red color on hull (critical)
+═══════════════════════════════════════════════════════════════════════════

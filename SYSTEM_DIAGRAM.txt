@@ -1,0 +1,254 @@
+================================================================================
+                        SHIELD SYSTEM ARCHITECTURE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          DAMAGE APPLICATION FLOW                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              Damage Incoming
+                                    ↓
+                    ┌───────────────────────────────┐
+                    │  take_damage(amount, source)  │
+                    └───────────────────────────────┘
+                                    ↓
+                    ┌───────────────────────────────┐
+                    │ Reset shield_damage_timer=0   │
+                    │ (Stop regen timer)            │
+                    └───────────────────────────────┘
+                                    ↓
+                         ┌─────────────────────┐
+                         │ Shields Active?     │
+                         │ (current_shield>0)  │
+                         └────────┬────────────┘
+                                  │
+                    ┌─────────────┴──────────────┐
+                    ↓                            ↓
+                   YES                          NO
+                    ↓                            ↓
+    ┌───────────────────────────┐  ┌──────────────────────┐
+    │ Shield Absorbs Damage      │  │ Skip Shield (=0)     │
+    │ - Reduce current_shield    │  │ Pass all to Hull     │
+    │ - Subtract from amount     │  └──────────────────────┘
+    │ - Show impact_glimmer()    │
+    └───────────┬───────────────┘
+                │
+    ┌───────────▼──────────────┐
+    │ Any Damage Remaining?     │
+    │ (amount > 0)              │
+    └─────────┬────────────────┘
+              │
+       ┌──────┴──────┐
+       ↓             ↓
+      YES           NO
+       ↓             ↓
+    ┌──────────────────────┐  ┌──────────────────┐
+    │ Hull Takes Damage    │  │ End (All absorbed)│
+    │ - Reduce current_hull│  └──────────────────┘
+    │ (if hull > 0)        │
+    └──────────┬───────────┘
+               │
+    ┌──────────▼──────────────┐
+    │ Hull <= 0?              │
+    └─────────┬───────────────┘
+              │
+       ┌──────┴──────┐
+       ↓             ↓
+      YES           NO
+       ↓             ↓
+   ┌──────────────┐  ┌─────────────────┐
+   │ die()        │  │ Emit signal:    │
+   │ - Emit       │  │ player_damaged  │
+   │   player_    │  │ Update UI       │
+   │   died       │  └─────────────────┘
+   │ - Queue free │
+   └──────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     SHIELD REGENERATION CYCLE                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+         take_damage() Called
+                 ↓
+    ┌────────────────────────┐
+    │ shield_damage_timer=0  │ ← Resets every hit
+    └────────────┬───────────┘
+                 ↓
+         Each Frame in _physics_process()
+                 ↓
+    ┌────────────────────────────────┐
+    │ Shield < Max Shield?           │
+    └─────────┬──────────────────────┘
+              │
+         ┌────┴────┐
+         ↓         ↓
+        YES       NO (at max)
+         ↓         ↓
+    ┌─────────┐ ┌──────────────────┐
+    │ Add Δt  │ │ Do Nothing       │
+    │ to      │ │ (Wait for damage)│
+    │ timer   │ └──────────────────┘
+    └────┬────┘
+         ↓
+    ┌──────────────────────────────┐
+    │ timer >= regen_delay (3.0s)? │
+    └────────┬─────────────────────┘
+             │
+         ┌───┴───┐
+         ↓       ↓
+        NO      YES
+         ↓       ↓
+    ┌────────┐ ┌─────────────────────────┐
+    │ Wait   │ │ Regenerate Shield       │
+    │ More   │ │ - Add (rate * Δt)       │
+    │        │ │ - Cap at max_shield     │
+    │        │ │ - Emit player_damaged   │
+    └────────┘ │ - Update UI             │
+               └─────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          VISUAL FEEDBACK SYSTEM                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Shield Absorbs Damage
+         ↓
+show_impact_glimmer() Called
+         ↓
+ImpactGlimmer.trigger_glimmer()
+         ↓
+glimmer_timer = 0.15 (duration)
+is_glimmering = true
+         ↓
+Each frame in ImpactGlimmer._process():
+         ↓
+    ┌────────────────────────┐
+    │ Timer Decrements       │
+    │ (glimmer_timer -= Δt)  │
+    └──────────┬─────────────┘
+               ↓
+    ┌────────────────────────┐
+    │ Calculate Alpha        │
+    │ Fade-out + Flicker     │
+    │ sin(progress * π * 8)  │
+    └──────────┬─────────────┘
+               ↓
+    ┌────────────────────────┐
+    │ Apply Cyan Modulate    │
+    │ Color(0, 1, 1, alpha)  │
+    └──────────┬─────────────┘
+               ↓
+    ┌────────────────────────┐
+    │ Render Round Shield    │
+    │ Sprite at 2.1x Scale   │
+    └──────────┬─────────────┘
+               ↓
+         Timer Ends
+               ↓
+    ┌────────────────────────┐
+    │ Hide (Alpha = 0)       │
+    │ Ready for Next Impact  │
+    └────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           UI UPDATE SYSTEM                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Player Takes Damage or Shield Regenerates
+            ↓
+   player_damaged.emit(hull, shield)
+            ↓
+   CPU HUD Receives Signal
+            ↓
+    _on_player_damaged(hull, shield)
+            ↓
+    ┌──────────────────────────┐
+    │ hull_bar.value = hull    │
+    │ shield_bar.value = shield│
+    │ Update Labels            │
+    │ Check Hull Status        │
+    │ (Red if <= 25)           │
+    └──────────┬───────────────┘
+               ↓
+    Bars Update Visually
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         SIGNAL CONNECTION MAP                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+DamageZone
+  │
+  └─ body_entered ─→ Player._on_body_entered()
+                        │
+                        └─→ take_damage()
+                               │
+                               ├─→ show_impact_glimmer()
+                               │      │
+                               │      └─→ ImpactGlimmer.trigger_glimmer()
+                               │
+                               └─→ player_damaged.emit()
+                                      │
+                                      └─→ CPUHUD._on_player_damaged()
+                                             │
+                                             └─→ Update Bars & Labels
+
+
+Player Die Condition
+  │
+  └─ hull <= 0 ──→ die()
+                     │
+                     └─→ player_died.emit()
+                            │
+                            └─→ Main._on_player_died()
+                                   │
+                                   └─→ Show "SYSTEM CORRUPTED"
+                                   │
+                                   └─→ reload_current_scene()
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              ASSET PIPELINE                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+generated/shield_effect_round_frame_0.png (128x128)
+            │
+            └─→ player.tscn
+                    │
+                    └─→ ImpactGlimmer/Sprite2D
+                            │
+                            ├─ texture = shield sprite
+                            ├─ scale = (2.1, 2.1)
+                            ├─ modulate = Color(0, 1, 1, 0.9)
+                            │
+                            └─→ Displayed when damage taken
+
+
+================================================================================
+                            KEY STATISTICS
+================================================================================
+
+VARIABLES:
+  current_shield: 0-100 (actual health)
+  max_shield: 100 (constant)
+  current_hull: 0-100 (actual health)
+  max_hull: 100 (constant)
+  shield_damage_timer: 0-∞ (increments each frame)
+  shield_regen_delay: 3.0 seconds
+  shield_regen_rate: 20.0 points/second
+
+CALCULATIONS:
+  Shield_absorb = min(damage, current_shield)
+  Remaining_damage = damage - shield_absorb
+  Regen_amount = shield_regen_rate * delta_time
+  Regen_active = (shield_damage_timer >= shield_regen_delay)
+
+TIME FACTORS:
+  Shield Regen Startup: 3 seconds (after last damage)
+  Shield Full Regen: ~5 seconds (100 points ÷ 20 pts/sec)
+  Impact Effect: 0.15 seconds
+  Game Over: 2 second delay before reload
+
+================================================================================
